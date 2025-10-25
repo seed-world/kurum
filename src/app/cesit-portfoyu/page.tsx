@@ -1,9 +1,46 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Filter, Leaf, Sprout, BadgeCheck, QrCode, ChevronsUpDown, ChevronDown, X } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Leaf,
+  Sprout,
+  BadgeCheck,
+  QrCode,
+  ChevronsUpDown,
+  ChevronDown,
+  X,
+} from "lucide-react";
 
-const VARIETIES = [
+/** ---- Tipler ---- */
+const CATEGORIES = [
+  "Heirloom",
+  "Organik",
+  "GAP",
+  "Marmara",
+  "Ege",
+  "Karadeniz",
+  "İç Anadolu",
+  "Akdeniz",
+] as const;
+
+type Category = (typeof CATEGORIES)[number];
+
+type Variety = {
+  id: string;
+  title: string;
+  latin: string;
+  tags: Category[]; // BURASI: geniş dizi tipi (tuple değil)
+  maturity: number;
+  brix: number;
+  img: string;
+};
+
+type SortKey = "maturity-asc" | "maturity-desc" | "brix-desc" | "name-asc";
+
+/** ---- Veri ---- */
+const VARIETIES: readonly Variety[] = [
   {
     id: "tomato-ayar",
     title: "Ayar Domates",
@@ -60,15 +97,10 @@ const VARIETIES = [
   },
 ] as const;
 
-type Variety = (typeof VARIETIES)[number];
-
-const CATEGORIES = ["Heirloom", "Organik", "GAP", "Marmara", "Ege", "Karadeniz", "İç Anadolu", "Akdeniz"] as const;
-
-type SortKey = "maturity-asc" | "maturity-desc" | "brix-desc" | "name-asc";
-
+/** ---- Sayfa ---- */
 export default function VarietyPortfolioPage() {
   const [q, setQ] = useState("");
-  const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [activeTags, setActiveTags] = useState<Category[]>([]); // BURASI: Category[]
   const [sort, setSort] = useState<SortKey>("name-asc");
   const [open, setOpen] = useState<Variety | null>(null);
 
@@ -76,21 +108,24 @@ export default function VarietyPortfolioPage() {
     let rows = VARIETIES.filter((v) =>
       [v.title, v.latin].some((t) => t.toLowerCase().includes(q.toLowerCase()))
     );
+
     if (activeTags.length) {
-      rows = rows.filter((v) => activeTags.every((t) => v.tags.includes(t as any)));
+      // BURASI: t artık Category, v.tags ise Category[] => includes uyumlu
+      rows = rows.filter((v) => activeTags.every((t) => v.tags.includes(t)));
     }
+
     switch (sort) {
       case "maturity-asc":
-        rows.sort((a, b) => a.maturity - b.maturity);
+        rows = [...rows].sort((a, b) => a.maturity - b.maturity);
         break;
       case "maturity-desc":
-        rows.sort((a, b) => b.maturity - a.maturity);
+        rows = [...rows].sort((a, b) => b.maturity - a.maturity);
         break;
       case "brix-desc":
-        rows.sort((a, b) => b.brix - a.brix);
+        rows = [...rows].sort((a, b) => b.brix - a.brix);
         break;
       default:
-        rows.sort((a, b) => a.title.localeCompare(b.title, "tr"));
+        rows = [...rows].sort((a, b) => a.title.localeCompare(b.title, "tr"));
     }
     return rows;
   }, [q, activeTags, sort]);
@@ -98,7 +133,13 @@ export default function VarietyPortfolioPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Gradient şerit */}
-      <div className="h-1 w-full" style={{ background: "linear-gradient(90deg,#1b7f3a 0%,#27ae60 35%,#f39c12 70%,#d35400 100%)" }} />
+      <div
+        className="h-1 w-full"
+        style={{
+          background:
+            "linear-gradient(90deg,#1b7f3a 0%,#27ae60 35%,#f39c12 70%,#d35400 100%)",
+        }}
+      />
 
       <main className="mx-auto max-w-7xl px-4 py-12 md:py-16">
         {/* Header */}
@@ -111,7 +152,9 @@ export default function VarietyPortfolioPage() {
                 </span>
               </h1>
               <p className="text-gray-700 text-lg max-w-2xl leading-relaxed">
-                Heirloom ve bölgesel adaptasyonu yüksek çeşitlerimizin tamamını keşfedin. QR kodlu izlenebilirlik ve yetiştirme kılavuzlarıyla şeffaf deneyim.
+                Heirloom ve bölgesel adaptasyonu yüksek çeşitlerimizin tamamını
+                keşfedin. QR kodlu izlenebilirlik ve yetiştirme kılavuzlarıyla
+                şeffaf deneyim.
               </p>
             </div>
 
@@ -150,13 +193,15 @@ export default function VarietyPortfolioPage() {
               {CATEGORIES.map((t) => {
                 const isActive = activeTags.includes(t);
                 const isGreen = ["Heirloom", "Organik", "GAP"].includes(t);
-                
+
                 return (
                   <button
                     key={t}
                     onClick={() =>
                       setActiveTags((prev) =>
-                        prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
+                        prev.includes(t)
+                          ? prev.filter((x) => x !== t)
+                          : [...prev, t]
                       )
                     }
                     className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
@@ -189,7 +234,9 @@ export default function VarietyPortfolioPage() {
                   >
                     {t}
                     <button
-                      onClick={() => setActiveTags((prev) => prev.filter((x) => x !== t))}
+                      onClick={() =>
+                        setActiveTags((prev) => prev.filter((x) => x !== t))
+                      }
                       className="hover:text-gray-900"
                     >
                       <X className="h-3 w-3" />
@@ -210,7 +257,8 @@ export default function VarietyPortfolioPage() {
         {/* Sonuç sayısı */}
         <div className="mb-6 flex items-center justify-between">
           <p className="text-gray-600">
-            <span className="font-bold text-gray-900">{filtered.length}</span> çeşit bulundu
+            <span className="font-bold text-gray-900">{filtered.length}</span>{" "}
+            çeşit bulundu
           </p>
         </div>
 
@@ -223,34 +271,50 @@ export default function VarietyPortfolioPage() {
             >
               {/* Görsel */}
               <div className="relative h-56 overflow-hidden">
-                <img 
-                  src={v.img} 
+                <img
+                  src={v.img}
                   alt={v.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                
+
                 {/* Etiketler */}
                 <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                   {v.tags.includes("Heirloom") && (
-                    <BadgePill icon={<Sprout className="h-3.5 w-3.5" />} text="Heirloom" color="green" />
+                    <BadgePill
+                      icon={<Sprout className="h-3.5 w-3.5" />}
+                      text="Heirloom"
+                      color="green"
+                    />
                   )}
                   {v.tags.includes("Organik") && (
-                    <BadgePill icon={<Leaf className="h-3.5 w-3.5" />} text="Organik" color="green" />
+                    <BadgePill
+                      icon={<Leaf className="h-3.5 w-3.5" />}
+                      text="Organik"
+                      color="green"
+                    />
                   )}
-                  <BadgePill icon={<QrCode className="h-3.5 w-3.5" />} text="QR" color="amber" />
+                  <BadgePill
+                    icon={<QrCode className="h-3.5 w-3.5" />}
+                    text="QR"
+                    color="amber"
+                  />
                 </div>
               </div>
 
               {/* İçerik */}
               <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-1">{v.title}</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-1">
+                  {v.title}
+                </h3>
                 <p className="text-sm text-gray-500 italic mb-4">{v.latin}</p>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="rounded-xl bg-gradient-to-br from-[#1b7f3a]/10 to-[#27ae60]/10 p-3 border border-[#27ae60]/20">
                     <p className="text-xs text-gray-600 mb-1">Olgunlaşma</p>
-                    <p className="text-lg font-bold text-gray-900">{v.maturity} gün</p>
+                    <p className="text-lg font-bold text-gray-900">
+                      {v.maturity} gün
+                    </p>
                   </div>
                   <div className="rounded-xl bg-gradient-to-br from-[#f39c12]/10 to-[#d35400]/10 p-3 border border-[#f39c12]/20">
                     <p className="text-xs text-gray-600 mb-1">Brix</p>
@@ -275,8 +339,12 @@ export default function VarietyPortfolioPage() {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-4">
               <Search className="h-10 w-10 text-gray-400" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Sonuç Bulunamadı</h3>
-            <p className="text-gray-600 mb-4">Arama kriterlerinizi değiştirmeyi deneyin</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Sonuç Bulunamadı
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Arama kriterlerinizi değiştirmeyi deneyin
+            </p>
             <button
               onClick={() => {
                 setQ("");
@@ -293,7 +361,7 @@ export default function VarietyPortfolioPage() {
       {/* Modal */}
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setOpen(null)}
           />
@@ -308,7 +376,11 @@ export default function VarietyPortfolioPage() {
             <div className="grid md:grid-cols-2">
               {/* Görsel */}
               <div className="relative h-64 md:h-full">
-                <img src={open.img} alt={open.title} className="w-full h-full object-cover" />
+                <img
+                  src={open.img}
+                  alt={open.title}
+                  className="w-full h-full object-cover"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               </div>
 
@@ -319,17 +391,23 @@ export default function VarietyPortfolioPage() {
                   İzlenebilir
                 </div>
 
-                <h3 className="text-3xl font-bold text-gray-900 mb-2">{open.title}</h3>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">
+                  {open.title}
+                </h3>
                 <p className="text-gray-600 italic mb-6">{open.latin}</p>
 
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center justify-between py-3 border-b border-gray-200">
                     <span className="text-gray-600">Olgunlaşma süresi:</span>
-                    <span className="font-bold text-gray-900">{open.maturity} gün</span>
+                    <span className="font-bold text-gray-900">
+                      {open.maturity} gün
+                    </span>
                   </div>
                   <div className="flex items-center justify-between py-3 border-b border-gray-200">
                     <span className="text-gray-600">Ortalama Brix:</span>
-                    <span className="font-bold text-gray-900">{open.brix}</span>
+                    <span className="font-bold text-gray-900">
+                      {open.brix}
+                    </span>
                   </div>
                 </div>
 
@@ -373,20 +451,38 @@ export default function VarietyPortfolioPage() {
   );
 }
 
-function BadgePill({ icon, text, color }: { icon: React.ReactNode; text: string; color: "green" | "amber" }) {
-  const bgClass = color === "green"
-    ? "bg-gradient-to-r from-[#1b7f3a] to-[#27ae60]"
-    : "bg-gradient-to-r from-[#f39c12] to-[#d35400]";
+/** ---- Bileşenler ---- */
+function BadgePill({
+  icon,
+  text,
+  color,
+}: {
+  icon: React.ReactNode;
+  text: string;
+  color: "green" | "amber";
+}) {
+  const bgClass =
+    color === "green"
+      ? "bg-gradient-to-r from-[#1b7f3a] to-[#27ae60]"
+      : "bg-gradient-to-r from-[#f39c12] to-[#d35400]";
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full ${bgClass} px-3 py-1.5 text-xs font-bold text-white shadow-md`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full ${bgClass} px-3 py-1.5 text-xs font-bold text-white shadow-md`}
+    >
       {icon}
       {text}
     </span>
   );
 }
 
-function SortSelect({ value, onChange }: { value: SortKey; onChange: (v: SortKey) => void }) {
+function SortSelect({
+  value,
+  onChange,
+}: {
+  value: SortKey;
+  onChange: (v: SortKey) => void;
+}) {
   return (
     <div className="relative">
       <ChevronsUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
