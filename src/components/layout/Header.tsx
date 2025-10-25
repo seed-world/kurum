@@ -40,7 +40,7 @@ export default function Header() {
               className="rounded-md object-contain transition-transform group-hover:scale-105" />
           </Link>
 
-          {/* desktop nav */}
+          {/* desktop asfsdnav */}
           <nav className="hidden xl:flex items-center gap-6" aria-label="Ana menü">
             {mainNav.map((item) => (
               <Link key={item.href} href={item.href}
