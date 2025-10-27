@@ -8,8 +8,7 @@ import { ShoppingCart, Search, Menu, X, ChevronDown } from "lucide-react";
 const mainNav = [
   { href: "/", label: "Ana Sayfa" },
   { href: "/kurumsal", label: "Kurumsal" },
-  { href: "/urunler", label: "Ürünler" },
-  { href: "/cesit-portfoyu", label: "Çeşit Portföyü" },
+  { href: "/magaza", label: "Mağaza" },
   { href: "/arge-sertifikalar", label: "Ar-Ge" },
   { href: "/izlenebilirlik", label: "İzlenebilirlik" },
 ];
@@ -17,7 +16,6 @@ const mainNav = [
 const moreNav = [
   { href: "/surdurulebilirlik", label: "Sürdürülebilirlik" },
   { href: "/satis-kanallari", label: "Satış Kanalları" },
-  { href: "/magaza", label: "Mağaza" },
   { href: "/rfq", label: "RFQ Talebi" },
   { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/iletisim", label: "İletişim" },
@@ -76,10 +74,7 @@ export default function Header() {
 
           {/* actions */}
           <div className="flex items-center gap-3">
-            <button aria-label="Ara"
-              className="p-2.5 rounded-xl border border-black/10 hover:border-green-500/30 hover:bg-green-50/50 transition-all duration-200 group">
-              <Search size={18} className="text-black/60 group-hover:text-green-600 transition-colors" />
-            </button>
+         
 
             <Link href="/sepet" aria-label="Sepet"
               className="relative p-2.5 rounded-xl border border-black/10 hover:border-amber-500/30 hover:bg-amber-50/50 transition-all duration-200 group">

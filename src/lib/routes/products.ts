@@ -1,4 +1,3 @@
-// File: src/lib/routes/products.ts
 import { executeResult, queryRows } from "../db/connection";
 import type {
     ListOptions,
@@ -23,7 +22,6 @@ function normalizeUndefinedToNull<T extends object>(obj: T): T {
 export async function listProducts(opts?: ListOptions): Promise<PagedResult<Product>> {
     const { page, limit, offset } = paginate(opts);
 
-    // LIMIT/OFFSET’i parametreyle değil sayısal sanitize ile stringe göm
     const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(200, Number(limit))) : 20;
     const safeOffset = Number.isFinite(offset) ? Math.max(0, Number(offset)) : 0;
 
@@ -32,7 +30,6 @@ export async function listProducts(opts?: ListOptions): Promise<PagedResult<Prod
         "id", "product_type", "variety", "region", "code", "created_at", "updated_at"
     ]);
 
-    // Sıralama kolonu alias ile nitelenmiş olsun
     const orderColumn = ["id", "product_type", "variety", "region", "code", "created_at", "updated_at"].includes(column)
         ? `p.${column}`
         : "p.id";
@@ -74,20 +71,15 @@ export async function getProductById(id: number | string): Promise<Product | nul
 
 /** Ekle */
 export async function createProduct(input: NewProductInput): Promise<Product> {
-    console.log("📦 Gelen input:", input);
-
+    // input burada JSON ya da form-data'dan normalize edilip geliyor.
     const picked = pick(input, [
         "product_type", "variety", "sub_type", "code", "region", "germination_start_year",
         "seeds_2023", "seeds_2024", "seeds_2025_expected", "annual_growth_factor",
         "seedling_unit_price", "asset_value_2023", "asset_value_2024", "asset_value_2025",
-        "is_active"
+        "is_active", "is_featured", "image_path"
     ]);
 
-    // TS tarafında tip uğraştırmamak için paramları generic Record olarak geçiriyoruz
     const payload = normalizeUndefinedToNull(picked) as Record<string, any>;
-
-    console.log("🧩 DB'ye giden payload:", payload);
-
 
     const [res] = await executeResult(
         `
@@ -95,12 +87,12 @@ export async function createProduct(input: NewProductInput): Promise<Product> {
     (product_type,variety,sub_type,code,region,germination_start_year,
      seeds_2023,seeds_2024,seeds_2025_expected,annual_growth_factor,
      seedling_unit_price,asset_value_2023,asset_value_2024,asset_value_2025,
-     is_active,created_at,updated_at)
+     is_active,is_featured,image_path,created_at,updated_at)
     VALUES
     (:product_type,:variety,:sub_type,:code,:region,:germination_start_year,
      :seeds_2023,:seeds_2024,:seeds_2025_expected,:annual_growth_factor,
      :seedling_unit_price,:asset_value_2023,:asset_value_2024,:asset_value_2025,
-     COALESCE(:is_active,1),NOW(),NOW())
+     COALESCE(:is_active,1),COALESCE(:is_featured,0),:image_path,NOW(),NOW())
     `,
         payload
     );
@@ -118,11 +110,10 @@ export async function updateProduct(id: number | string, input: UpdateProductInp
         "product_type", "variety", "sub_type", "code", "region", "germination_start_year",
         "seeds_2023", "seeds_2024", "seeds_2025_expected", "annual_growth_factor",
         "seedling_unit_price", "asset_value_2023", "asset_value_2024", "asset_value_2025",
-        "is_active"
+        "is_active", "is_featured", "image_path"
     ]);
 
     const allowed = normalizeUndefinedToNull(picked) as Record<string, any>;
-
     const keys = Object.keys(allowed);
     if (keys.length === 0) return await getProductById(pid);
 
