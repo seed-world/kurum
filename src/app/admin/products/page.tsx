@@ -23,6 +23,12 @@ type Product = {
   is_active: 0 | 1;
   created_at: string;
   updated_at: string;
+  category_id: number | null; // ✅ eklendi
+};
+
+type Category = {
+  id: number;
+  name: string;
 };
 
 type Paged<T> = { data: T[]; page: number; limit: number; total: number };
@@ -72,6 +78,19 @@ export default function ProductsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
+  // ✅ Kategori dropdown'ı için liste
+  const [categories, setCategories] = useState<Category[]>([]);
+  async function fetchCategories() {
+    try {
+      const res = await fetch(`/api/category?limit=1000&order=asc&sort=name`, { cache: "no-store" });
+      if (!res.ok) return;
+      const json = await res.json();
+      const rows = (json?.data ?? []) as any[];
+      setCategories(rows.map((r) => ({ id: r.id, name: r.name })));
+    } catch {}
+  }
+  useEffect(() => { fetchCategories(); }, []);
+
   const [form, setForm] = useState({
     product_type: "",
     variety: "",
@@ -87,6 +106,7 @@ export default function ProductsPage() {
     asset_value_2023: "",
     asset_value_2024: "",
     asset_value_2025: "",
+    category_id: "" as string, // ✅ eklendi (dropdown değeri string tutuluyor)
   });
 
   const [saving, setSaving] = useState(false);
@@ -152,7 +172,8 @@ export default function ProductsPage() {
       product_type: "", variety: "", sub_type: "", code: "", region: "",
       germination_start_year: "", seeds_2023: "", seeds_2024: "", seeds_2025_expected: "",
       annual_growth_factor: "", seedling_unit_price: "",
-      asset_value_2023: "", asset_value_2024: "", asset_value_2025: ""
+      asset_value_2023: "", asset_value_2024: "", asset_value_2025: "",
+      category_id: "",
     });
     setIsFeatured(false);
     resetFileInput();
@@ -185,6 +206,9 @@ export default function ProductsPage() {
       if (a2023 !== undefined) fd.append("asset_value_2023", String(a2023));
       if (a2024 !== undefined) fd.append("asset_value_2024", String(a2024));
       if (a2025 !== undefined) fd.append("asset_value_2025", String(a2025));
+
+      // ✅ kategori
+      if (form.category_id) fd.append("category_id", String(Number(form.category_id)));
 
       fd.append("is_active", "1");
       fd.append("is_featured", isFeatured ? "1" : "0");
@@ -235,6 +259,10 @@ export default function ProductsPage() {
         if (a2025 !== undefined) fd.append("asset_value_2025", String(a2025));
 
         fd.append("is_featured", isFeatured ? "1" : "0");
+
+        // ✅ kategori
+        if (form.category_id) fd.append("category_id", String(Number(form.category_id)));
+
         fd.append("image", file);
 
         res = await fetch(`/api/products/${editId}`, { method: "PATCH", body: fd });
@@ -255,6 +283,8 @@ export default function ProductsPage() {
           asset_value_2024: form.asset_value_2024 ? toNumberSafe(form.asset_value_2024) : null,
           asset_value_2025: form.asset_value_2025 ? toNumberSafe(form.asset_value_2025) : null,
           is_featured: isFeatured ? 1 : 0,
+          // ✅ kategori
+          category_id: form.category_id ? Number(form.category_id) : null,
         };
         res = await fetch(`/api/products/${editId}`, {
           method: "PATCH",
@@ -295,6 +325,7 @@ export default function ProductsPage() {
       asset_value_2023: p.asset_value_2023 != null ? String(p.asset_value_2023) : "",
       asset_value_2024: p.asset_value_2024 != null ? String(p.asset_value_2024) : "",
       asset_value_2025: p.asset_value_2025 != null ? String(p.asset_value_2025) : "",
+      category_id: p.category_id != null ? String(p.category_id) : "", // ✅
     });
     setIsFeatured(p.is_featured === 1);
     resetFileInput(); // edit'e geçerken eski dosyayı sıfırla
@@ -379,6 +410,18 @@ export default function ProductsPage() {
             <input className="rounded-lg border border-gray-300 px-4 py-2 focus:border-[#27ae60] focus:outline-none focus:ring-2 focus:ring-[#27ae60]/20 transition-all" placeholder="Varlık Değeri 2024 (₺)" value={form.asset_value_2024} onChange={e => setForm({ ...form, asset_value_2024: e.target.value })} />
             <input className="rounded-lg border border-gray-300 px-4 py-2 focus:border-[#27ae60] focus:outline-none focus:ring-2 focus:ring-[#27ae60]/20 transition-all" placeholder="Varlık Değeri 2025 (₺)" value={form.asset_value_2025} onChange={e => setForm({ ...form, asset_value_2025: e.target.value })} />
 
+            {/* ✅ Kategori dropdown */}
+            <select
+              className="rounded-lg border border-gray-300 px-4 py-2 focus:border-[#27ae60] focus:outline-none focus:ring-2 focus:ring-[#27ae60]/20 transition-all"
+              value={form.category_id}
+              onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+            >
+              <option value="">Kategori seç (opsiyonel)</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+
             {/* Görsel inputu */}
             <div className="col-span-1 md:col-span-2 lg:col-span-2 flex items-center gap-3">
               <input
@@ -437,7 +480,6 @@ export default function ProductsPage() {
           <table className="min-w-full text-sm divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {/* Sol aksiyon sütunu: Edit + Delete */}
                 <th className="py-3 px-4 text-left font-semibold text-gray-900 w-20">Aksiyon</th>
                 <th className="py-3 px-4 text-left font-semibold text-gray-900">ID</th>
                 <th className="py-3 px-4 text-left font-semibold text-gray-900">Görsel</th>
@@ -455,15 +497,16 @@ export default function ProductsPage() {
                 <th className="py-3 px-4 text-left font-semibold text-gray-900">Varlık 2023</th>
                 <th className="py-3 px-4 text-left font-semibold text-gray-900">Varlık 2024</th>
                 <th className="py-3 px-4 text-left font-semibold text-gray-900">Varlık 2025</th>
+                <th className="py-3 px-4 text-left font-semibold text-gray-900">Kategori</th>{/* ✅ */}
                 <th className="py-3 px-4 text-left font-semibold text-gray-900">Öne çıkan</th>
                 <th className="py-3 px-4 text-left font-semibold text-gray-900">Aktif</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {loading ? (
-                <tr><td className="py-4 px-4 text-center text-gray-500" colSpan={19}>Yükleniyor…</td></tr>
+                <tr><td className="py-4 px-4 text-center text-gray-500" colSpan={20}>Yükleniyor…</td></tr>
               ) : list.data.length === 0 ? (
-                <tr><td className="py-4 px-4 text-center text-gray-500" colSpan={19}>Kayıt yok</td></tr>
+                <tr><td className="py-4 px-4 text-center text-gray-500" colSpan={20}>Kayıt yok</td></tr>
               ) : (
                 list.data.map((p, index) => (
                   <tr key={p.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
@@ -511,6 +554,11 @@ export default function ProductsPage() {
                     <td className="py-3 px-4 text-gray-900">{p.asset_value_2023 ?? "-"}</td>
                     <td className="py-3 px-4 text-gray-900">{p.asset_value_2024 ?? "-"}</td>
                     <td className="py-3 px-4 text-gray-900">{p.asset_value_2025 ?? "-"}</td>
+                    <td className="py-3 px-4 text-gray-900">
+                      {p.category_id
+                        ? (categories.find(c => c.id === p.category_id)?.name ?? `#${p.category_id}`)
+                        : "—"}
+                    </td>
                     <td className="py-3 px-4 text-gray-900">{p.is_featured ? "★" : "-"}</td>
                     <td className="py-3 px-4 text-gray-900">{p.is_active ? "✓" : "✗"}</td>
                   </tr>

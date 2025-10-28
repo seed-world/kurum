@@ -4,46 +4,39 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, Leaf, Shield, Globe, ArrowRight } from "lucide-react";
 
-/**
- * Auth — GG SEED WORLD
- * - Video arkaplan, üst gradient şerit
- * - LOGIN: form SAĞDA
- * - REGISTER: form SOLDa
- * - Renk uyumu (tüm sayfalarla aynı mantık):
- *   Yeşil:  #1b7f3a → #27ae60
- *   Amber:  #f39c12 → #d35400
- * - Cam efektli kartlar, erişilebilirlik odak stiller
- */
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const isLogin = mode === "login";
 
-  // Cross-fade + slide animasyon varyantları
+  // Gelişmiş animasyon varyantları
   const panelVariants = {
     initial: (direction: number) => ({
       opacity: 0,
-      x: 40 * direction,
-      filter: "blur(6px)",
+      x: 60 * direction,
+      scale: 0.95,
+      filter: "blur(8px)",
     }),
     animate: {
       opacity: 1,
       x: 0,
+      scale: 1,
       filter: "blur(0px)",
-      transition: { type: "spring", stiffness: 120, damping: 16 },
+      transition: { type: "spring", stiffness: 130, damping: 18 },
     },
     exit: (direction: number) => ({
       opacity: 0,
-      x: -40 * direction,
-      filter: "blur(6px)",
-      transition: { duration: 0.18 },
+      x: -60 * direction,
+      scale: 0.95,
+      filter: "blur(8px)",
+      transition: { duration: 0.22, ease: "easeIn" },
     }),
   } as const;
 
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-neutral-950">
-      {/* Üst ince gradient şerit (site geneliyle uyumlu) */}
+      {/* Üst ince gradient şerit */}
       <div
         aria-hidden
         className="h-1.5 w-full"
@@ -55,7 +48,7 @@ export default function AuthPage() {
 
       {/* Arkaplan video */}
       <video
-        className="pointer-events-none fixed inset-0 -z-20 h-full w-full object-cover"
+        className="pointer-events-none fixed inset-0 -z-20 h-full w-full object-cover motion-reduce:hidden"
         src="/videos/auth.mp4"
         poster="/images/auth-poster.jpg"
         autoPlay
@@ -64,16 +57,32 @@ export default function AuthPage() {
         playsInline
         aria-hidden
       />
-      {/* okunabilirlik degrade örtüsü */}
-      <div
-        aria-hidden
-        className="fixed inset-0 -z-10 bg-gradient-to-b from-black/65 via-black/35 to-black/65"
-      />
+
+      {/* Koyu overlay + marka yıkama + vignette + doku */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/70" />
+        <div className="absolute -inset-x-20 -top-[20%] h-[60%] skew-y-6 opacity-40 blur-3xl bg-gradient-to-r from-[#1b7f3a]/50 via-[#27ae60]/45 to-[#f39c12]/45" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.75) 100%)",
+          }}
+        />
+        <div className="absolute inset-0 opacity-[0.08]">
+          <svg width="100%" height="100%" aria-hidden>
+            <pattern id="auth-grid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+              <path d="M 32 0 L 0 0 0 32" fill="none" stroke="white" strokeWidth="1" />
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#auth-grid)" />
+          </svg>
+        </div>
+      </div>
 
       {/* İçerik */}
-      <main className="relative mx-auto w-full max-w-7xl px-4 py-12 md:py-16">
-        <div className="grid items-center gap-8 md:grid-cols-2">
-          {/* Bilgi / Pazarlama paneli (formun karşısında) */}
+      <main className="relative mx-auto w-full max-w-7xl px-4 py-16 md:py-20">
+        <div className="grid items-center gap-10 md:grid-cols-2 lg:gap-16">
+          {/* Bilgi / Pazarlama paneli */}
           <AnimatePresence mode="popLayout" initial={false}>
             {isLogin ? (
               <motion.aside
@@ -102,7 +111,7 @@ export default function AuthPage() {
             )}
           </AnimatePresence>
 
-          {/* Form paneli — LOGIN sağ, REGISTER sol */}
+          {/* Form paneli */}
           <AnimatePresence mode="popLayout" initial={false}>
             {isLogin ? (
               <motion.section
@@ -161,69 +170,79 @@ function AuthCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative rounded-[28px] border border-white/20 bg-white/10 p-6 md:p-8 text-white shadow-2xl backdrop-blur-xl">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="relative rounded-[32px] border border-white/15 bg-white/8 p-8 md:p-10 text-white shadow-2xl backdrop-blur-2xl overflow-hidden"
+    >
       {/* Glow kenar — marka gradyanı */}
-      <div className="pointer-events-none absolute -inset-0.5 -z-10 rounded-[30px] bg-[conic-gradient(at_50%_50%,#1b7f3a22,#27ae6022,#f39c1222,#d3540022,#1b7f3a22)] blur-xl" />
-      <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h2>
-      {subtitle && (
-        <p className="mt-1 text-white/85 text-sm md:text-base">{subtitle}</p>
-      )}
-      <div className="mt-6">{children}</div>
-    </div>
+      <div className="pointer-events-none absolute -inset-0.5 -z-10 rounded-[34px] bg-[conic-gradient(at_50%_50%,#1b7f3a33,#27ae6033,#f39c1233,#d3540033,#1b7f3a33)] blur-2xl opacity-70" />
+      
+      <div className="relative z-10">
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-white via-white to-white/80 bg-clip-text text-transparent">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-2 text-white/80 text-base md:text-lg">{subtitle}</p>
+        )}
+        <div className="mt-8">{children}</div>
+      </div>
+    </motion.div>
   );
 }
 
 function LoginForm() {
   return (
-    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-      <Field label="E-posta" name="email" type="email" icon={<Mail size={18} />} />
-      <Field label="Şifre" name="password" type="password" icon={<Lock size={18} />} />
+    <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+      <Field label="E-posta" name="email" type="email" icon={<Mail size={20} />} />
+      <Field label="Şifre" name="password" type="password" icon={<Lock size={20} />} />
 
-      <div className="flex items-center justify-between text-sm">
-        <label className="inline-flex items-center gap-2 select-none">
-          <input
-            type="checkbox"
-            className="h-4 w-4 rounded border-white/30 bg-white/10 text-[#27ae60] focus:ring-[#27ae60]/40"
-          />
-          <span className="text-white/85">Beni hatırla</span>
-        </label>
-        <Link href="/sifre-sifirla" className="text-[#27ae60] hover:text-white">
+      <div className="flex items-center justify-end text-sm">
+ 
+        <Link href="/sifre-sifirla" className="text-[#27ae60] hover:text-white transition-colors font-medium">
           Şifremi unuttum
         </Link>
       </div>
 
-      <button
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         type="submit"
-        className="cursor-pointer group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#1b7f3a] to-[#27ae60] px-5 py-3 font-semibold text-white shadow-lg transition-all hover:from-[#27ae60] hover:to-[#1b7f3a] hover:shadow-xl"
+        className="cursor-pointer group inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#1b7f3a] to-[#27ae60] px-6 py-4 font-bold text-white shadow-xl transition-all hover:from-[#27ae60] hover:to-[#1b7f3a] hover:shadow-2xl"
       >
         Giriş Yap
-      </button>
+        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+      </motion.button>
     </form>
   );
 }
 
 function RegisterForm() {
   return (
-    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-      <Field label="Ad Soyad" name="name" icon={<User size={18} />} />
-      <Field label="E-posta" name="email" type="email" icon={<Mail size={18} />} />
-      <Field label="Şifre" name="password" type="password" icon={<Lock size={18} />} />
-      <Field label="Şifre (Tekrar)" name="confirm" type="password" icon={<Lock size={18} />} />
+    <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+      <Field label="Ad Soyad" name="name" icon={<User size={20} />} />
+      <Field label="E-posta" name="email" type="email" icon={<Mail size={20} />} />
+      <Field label="Şifre" name="password" type="password" icon={<Lock size={20} />} />
+      <Field label="Şifre (Tekrar)" name="confirm" type="password" icon={<Lock size={20} />} />
 
-      <button
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         type="submit"
-        className="cursor-pointer group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#f39c12] to-[#d35400] px-5 py-3 font-semibold text-white shadow-lg transition-all hover:from-[#d35400] hover:to-[#f39c12] hover:shadow-xl"
+        className="cursor-pointer group inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#f39c12] to-[#d35400] px-6 py-4 font-bold text-white shadow-xl transition-all hover:from-[#d35400] hover:to-[#f39c12] hover:shadow-2xl"
       >
         Kayıt Ol
-      </button>
+        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+      </motion.button>
 
-      <p className="mt-2 text-xs text-white/70">
+      <p className="mt-3 text-xs text-white/70 leading-relaxed">
         Kayıt olarak{" "}
-        <Link href="/kvkk" className="underline decoration-[#27ae60] underline-offset-4 hover:text-white">
+        <Link href="/kvkk" className="underline decoration-[#27ae60]/50 underline-offset-4 hover:text-white transition-colors">
           KVKK
         </Link>{" "}
         ve{" "}
-        <Link href="/kosullar" className="underline decoration-[#27ae60] underline-offset-4 hover:text-white">
+        <Link href="/kosullar" className="underline decoration-[#27ae60]/50 underline-offset-4 hover:text-white transition-colors">
           Kullanım Koşulları
         </Link>
         'nı kabul etmiş olursunuz.
@@ -245,11 +264,11 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="mb-1.5 block text-sm font-semibold text-white/90">
+      <label htmlFor={name} className="mb-2 block text-sm font-bold text-white/95">
         {label}
       </label>
-      <div className="relative">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/70">
+      <div className="relative group">
+        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/70 group-focus-within:text-[#27ae60] transition-colors">
           {icon}
         </span>
         <input
@@ -257,7 +276,7 @@ function Field({
           name={name}
           type={type}
           required
-          className="w-full rounded-xl border border-white/20 bg-white/10 px-10 py-3 text-white placeholder-white/60 outline-none backdrop-blur-md transition focus:border-[#27ae60] focus:ring-4 focus:ring-[#27ae60]/25"
+          className="w-full rounded-2xl border border-white/20 bg-white/8 px-12 py-4 text-white placeholder-white/50 outline-none backdrop-blur-md transition-all focus:border-[#27ae60] focus:ring-4 focus:ring-[#27ae60]/20 focus:bg-white/12"
           placeholder={label}
         />
       </div>
@@ -275,84 +294,80 @@ function SwitchText({
   onClick: () => void;
 }) {
   return (
-    <p className="mt-4 text-sm text-white/85">
+    <p className="mt-6 text-center text-sm text-white/90">
       {text}{" "}
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         type="button"
         onClick={onClick}
-        className="cursor-pointer font-bold underline decoration-[#27ae60] underline-offset-4 hover:text-white"
+        className="cursor-pointer font-bold text-[#27ae60] underline decoration-2 underline-offset-4 hover:text-white transition-all"
       >
         {action}
-      </button>
+      </motion.button>
     </p>
   );
 }
 
 function InfoPanel({ mode }: { mode: "login" | "register" }) {
+  const features = mode === "login" ? [
+    { ico: <Leaf className="w-5 h-5" />, text: "Sipariş ve RFQ yönetimi" },
+    { ico: <Shield className="w-5 h-5" />, text: "Hızlı ödeme ve adres kaydı" },
+    { ico: <Globe className="w-5 h-5" />, text: "İzlenebilirlik geçmişi" },
+  ] : [
+    { ico: <Leaf className="w-5 h-5" />, text: "Heirloom çeşitlere erişim" },
+    { ico: <Shield className="w-5 h-5" />, text: "Eğitim ve teknik destek" },
+    { ico: <Globe className="w-5 h-5" />, text: "Kurumsal fiyatlandırma seçenekleri" },
+  ];
+
   return (
-    <div className="relative rounded-[28px] border border-white/20 bg-white/5 p-6 md:p-8 text-white shadow-2xl backdrop-blur-xl">
-      {/* Marka ışığı: yeşil→amber karışım */}
-      <div className="pointer-events-none absolute -inset-0.5 -z-10 rounded-[30px] bg-[conic-gradient(at_50%_50%,#1b7f3a26,#27ae6026,#f39c1226,#d3540026,#1b7f3a26)] blur-xl" />
-
-      <h2 className="mt-2 text-2xl md:text-3xl font-bold leading-tight">
-        {mode === "login" ? (
-          <>
-            Ata Tohumu <span className="text-[#27ae60]">İzlenebilir</span> ekosisteme giriş yapın
-          </>
-        ) : (
-          <>
-            Seed World'e <span className="text-[#f39c12]">kayıt</span> olun
-          </>
-        )}
-      </h2>
-
-      <p className="mt-3 text-white/85">
-        {mode === "login"
-          ? "Hesabınızla mağaza, RFQ talepleri ve sipariş geçmişinize erişin."
-          : "Üretici ve kurumsal çözümlerimize erişmek, mağazadan alışveriş yapmak ve izlenebilirlik araçlarını denemek için hızlıca hesap oluşturun."}
-      </p>
-
-      <ul className="mt-5 grid gap-2 text-sm text-white/85">
-        {mode === "login" ? (
-          <>
-            <li className="flex items-center gap-2">
-              <Check /> Sipariş ve RFQ yönetimi
-            </li>
-            <li className="flex items-center gap-2">
-              <Check /> Hızlı ödeme ve adres kaydı
-            </li>
-            <li className="flex items-center gap-2">
-              <Check /> İzlenebilirlik geçmişi
-            </li>
-          </>
-        ) : (
-          <>
-            <li className="flex items-center gap-2">
-              <Check /> Heirloom çeşitlere erişim
-            </li>
-            <li className="flex items-center gap-2">
-              <Check /> Eğitim ve teknik destek
-            </li>
-            <li className="flex items-center gap-2">
-              <Check /> Kurumsal fiyatlandırma seçenekleri
-            </li>
-          </>
-        )}
-      </ul>
-    </div>
-  );
-}
-
-function Check() {
-  return (
-    <svg
-      className="h-4 w-4 text-white"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="relative rounded-[32px] border border-white/15 bg-white/8 p-8 md:p-10 text-white shadow-2xl backdrop-blur-2xl"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-    </svg>
+      {/* Glow kenar */}
+      <div className="pointer-events-none absolute -inset-0.5 -z-10 rounded-[34px] bg-[conic-gradient(at_50%_50%,#1b7f3a30,#27ae6030,#f39c1230,#d3540030,#1b7f3a30)] blur-2xl opacity-70" />
+      
+      <div className="relative z-10">
+        <h2 className="text-3xl md:text-4xl font-bold leading-tight">
+          {mode === "login" ? (
+            <>
+              Ata Tohumu <span className="bg-gradient-to-r from-[#27ae60] to-[#1b7f3a] bg-clip-text text-transparent">İzlenebilir</span> ekosisteme giriş yapın
+            </>
+          ) : (
+            <>
+              Seed World'e <span className="bg-gradient-to-r from-[#f39c12] to-[#d35400] bg-clip-text text-transparent">kayıt</span> olun
+            </>
+          )}
+        </h2>
+
+        <p className="mt-4 text-white/90 text-base md:text-lg leading-relaxed">
+          {mode === "login"
+            ? "Hesabınızla mağaza, RFQ talepleri ve sipariş geçmişinize anında erişin."
+            : "Üretici ve kurumsal çözümlerimize erişmek, mağazadan alışveriş yapmak ve izlenebilirlik araçlarını denemek için hızlıca hesap oluşturun."}
+        </p>
+
+        <ul className="mt-8 space-y-4">
+          {features.map((f, i) => (
+            <motion.li
+              key={i}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.1 + 0.3 }}
+              className="flex items-center gap-3 text-white/90"
+            >
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${
+                mode === "login" ? "from-[#27ae60]/20 to-[#1b7f3a]/20" : "from-[#f39c12]/20 to-[#d35400]/20"
+              } backdrop-blur-sm border border-white/10`}>
+                {f.ico}
+              </div>
+              <span className="font-medium">{f.text}</span>
+            </motion.li>
+          ))}
+        </ul>
+      </div>
+    </motion.div>
   );
 }

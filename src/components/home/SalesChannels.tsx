@@ -49,7 +49,7 @@ export default function SalesChannels() {
     <section className="relative overflow-hidden bg-white">
       {/* NOT: Video kaldırıldı. Arkaplan örnek sayfa gibi açık zemin. */}
 
-      <Section className="relative py-16 md:py-20">
+      <Section className="relative py-8 md:py-20">
         {/* Başlık */}
         <div className="text-center max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-5xl font-bold leading-tight text-gray-900">

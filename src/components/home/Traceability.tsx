@@ -1,4 +1,6 @@
-// File: app/(site)/_components/Traceability.tsx
+"use client";
+
+import { motion } from "framer-motion";
 import Section from "./Section";
 
 export default function Traceability() {
@@ -8,19 +10,9 @@ export default function Traceability() {
       d: "Orijinal bölge ve üretici bilgisi.",
       gradient: "from-[#1b7f3a] to-[#27ae60]",
       icon: (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      ),
-    },
-    {
-      t: "Kalite Sertifikaları",
-      d: "Organik ve kalite standartlarına uygunluk.",
-      gradient: "from-[#f39c12] to-[#d35400]",
-      icon: (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
         </svg>
       ),
     },
@@ -29,11 +21,22 @@ export default function Traceability() {
       d: "Parti geçmişi ve yetiştirme rehberi.",
       gradient: "from-[#27ae60] to-[#f39c12]",
       icon: (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm11-2h3v3h-3v-3zm-3 3h2v2h-2v-2zm3 0h2v5h-2v-5zm2 0h3v2h-3v-2zm0 3h2v2h-2v-2z"/>
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm11-2h3v3h-3v-3zm-3 3h2v2h-2v-2zm3 0h2v5h-2v-5zm2 0h3v2h-3v-2zm0 3h2v2h-2v-2z" />
         </svg>
       ),
     },
+    {
+      t: "Kalite Sertifikaları",
+      d: "Organik ve kalite standartlarına uygunluk.",
+      gradient: "from-[#f39c12] to-[#d35400]",
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      ),
+    },
+
   ];
 
   return (
@@ -63,19 +66,19 @@ export default function Traceability() {
       {/* Koyu overlay + marka renk yıkaması + vignette + doku */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         {/* 1) temel koyu degrade */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
         {/* 2) eğimli marka renk yıkaması (wash) */}
-        <div className="absolute -inset-x-10 -top-[15%] h-[55%] transform skew-y-6 opacity-35 blur-3xl bg-gradient-to-r from-[#1b7f3a]/45 via-[#27ae60]/40 to-[#f39c12]/40" />
+        <div className="absolute -inset-x-20 -top-[20%] h-[60%] transform skew-y-6 opacity-40 blur-3xl bg-gradient-to-r from-[#1b7f3a]/50 via-[#27ae60]/45 to-[#f39c12]/45" />
         {/* 3) vignette */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(120% 70% at 50% -10%, rgba(255,255,255,0) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.65) 100%)",
+              "radial-gradient(120% 70% at 50% -10%, rgba(255,255,255,0) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.7) 100%)",
           }}
         />
         {/* 4) grid doku */}
-        <div className="absolute inset-0 opacity-[0.08]">
+        <div className="absolute inset-0 opacity-[0.1]">
           <svg width="100%" height="100%" aria-hidden="true">
             <pattern id="tinygrid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
               <path d="M 32 0 L 0 0 0 32" fill="none" stroke="white" strokeWidth="1" />
@@ -85,41 +88,51 @@ export default function Traceability() {
         </div>
       </div>
 
-      <Section className="relative z-20 py-16 md:py-24">
+      <Section className="relative z-20 py-20 md:py-32">
         {/* Başlık & kısa açıklama */}
-        <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-bold leading-tight text-white">
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          viewport={{ once: true }}
+          className="text-center max-w-4xl mx-auto"
+        >
+          <h2 className="text-4xl md:text-6xl font-bold leading-tight text-white tracking-tight">
             İzlenebilir{" "}
             <span className="bg-gradient-to-r from-[#1b7f3a] via-[#27ae60] to-[#f39c12] bg-clip-text text-transparent">
               Tedarik Zinciri
             </span>
           </h2>
-          <p className="mt-3 text-white/85">
+          <p className="mt-4 text-lg text-white/90 max-w-xl mx-auto">
             Her çeşidin kökeni, üretimi ve kalite süreci şeffaf.
           </p>
-        </div>
+        </motion.div>
 
         {/* Özellikler: cam efektli kartlar */}
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-          {items.map((it) => (
-            <div
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+          {items.map((it, idx) => (
+            <motion.div
               key={it.t}
-              className="group relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md p-6 text-white transition-all duration-300 hover:bg-white/15"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: idx * 0.2, ease: "easeOut" }}
+              viewport={{ once: true }}
+              className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 text-white transition-all duration-500 hover:bg-white/10 hover:shadow-2xl hover:border-white/30"
             >
               {/* üst marka şeridi */}
-              <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${it.gradient}`} />
+              <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${it.gradient} opacity-80 group-hover:opacity-100 transition-opacity`} />
               <div className="flex items-start gap-4">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${it.gradient} text-white shadow-lg ring-1 ring-white/10`}>
+                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${it.gradient} text-white shadow-xl ring-1 ring-white/20 group-hover:scale-105 transition-transform`}>
                   {it.icon}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold">{it.t}</p>
-                  <p className="text-sm text-white/85 mt-1">{it.d}</p>
+                  <p className="text-lg font-bold">{it.t}</p>
+                  <p className="text-base text-white/85 mt-2">{it.d}</p>
                 </div>
               </div>
               {/* hover alt çizgi efekti */}
-              <div className={`pointer-events-none absolute inset-x-6 bottom-4 h-[3px] rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-r ${it.gradient}`} />
-            </div>
+              <div className={`pointer-events-none absolute inset-x-8 bottom-4 h-1 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-r ${it.gradient} blur-sm`} />
+            </motion.div>
           ))}
         </div>
       </Section>

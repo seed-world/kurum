@@ -30,6 +30,13 @@ export default function Sidebar() {
           Kullanıcılar
         </a>
         <a
+          href="/admin/categories"
+          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-[#27ae60] rounded-lg transition-colors"
+        >
+          <Users className="h-5 w-5" />
+          Kategoriler
+        </a>
+        <a
           href="/admin/products"
           className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-[#27ae60] rounded-lg transition-colors"
         >
