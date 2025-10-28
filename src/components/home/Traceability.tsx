@@ -40,8 +40,8 @@ export default function Traceability() {
   ];
 
   return (
-    <section className="relative overflow-hidden">
-      {/* Üst ince marka şeridi (örnek sayfalarla aynı) */}
+    <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white">
+      {/* Üst ince marka şeridi */}
       <div
         className="absolute top-0 left-0 right-0 z-10 h-1"
         style={{
@@ -51,44 +51,26 @@ export default function Traceability() {
         aria-hidden="true"
       />
 
-      {/* Arka plan video (motion-reduce'de gizli) */}
-      <video
-        className="absolute inset-0 -z-20 h-full w-full object-cover motion-reduce:hidden"
-        src="/videos/trace.mp4"
-        poster="/images/trace-poster.jpg"
-        autoPlay
-        muted
-        loop
-        playsInline
-        aria-hidden="true"
+      {/* Vignette efekti */}
+      <div
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            "radial-gradient(120% 70% at 50% -10%, rgba(255,255,255,0) 0%, rgba(0,0,0,0.05) 60%, rgba(0,0,0,0.1) 100%)",
+        }}
       />
 
-      {/* Koyu overlay + marka renk yıkaması + vignette + doku */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        {/* 1) temel koyu degrade */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
-        {/* 2) eğimli marka renk yıkaması (wash) */}
-        <div className="absolute -inset-x-20 -top-[20%] h-[60%] transform skew-y-6 opacity-40 blur-3xl bg-gradient-to-r from-[#1b7f3a]/50 via-[#27ae60]/45 to-[#f39c12]/45" />
-        {/* 3) vignette */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(120% 70% at 50% -10%, rgba(255,255,255,0) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.7) 100%)",
-          }}
-        />
-        {/* 4) grid doku */}
-        <div className="absolute inset-0 opacity-[0.1]">
-          <svg width="100%" height="100%" aria-hidden="true">
-            <pattern id="tinygrid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
-              <path d="M 32 0 L 0 0 0 32" fill="none" stroke="white" strokeWidth="1" />
-            </pattern>
-            <rect width="100%" height="100%" fill="url(#tinygrid)" />
-          </svg>
-        </div>
+      {/* Hafif grid doku */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.03] -z-10">
+        <svg width="100%" height="100%" aria-hidden="true">
+          <pattern id="tinygrid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="black" strokeWidth="1" />
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#tinygrid)" />
+        </svg>
       </div>
 
-      <Section className="relative z-20 py-20 md:py-32">
+      <Section className="relative z-20 py-12 md:py-16">
         {/* Başlık & kısa açıklama */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -97,18 +79,18 @@ export default function Traceability() {
           viewport={{ once: true }}
           className="text-center max-w-4xl mx-auto"
         >
-          <h2 className="text-4xl md:text-6xl font-bold leading-tight text-white tracking-tight">
+          <h2 className="text-4xl md:text-6xl font-bold leading-tight text-gray-900 tracking-tight">
             İzlenebilir{" "}
             <span className="bg-gradient-to-r from-[#1b7f3a] via-[#27ae60] to-[#f39c12] bg-clip-text text-transparent">
               Tedarik Zinciri
             </span>
           </h2>
-          <p className="mt-4 text-lg text-white/90 max-w-xl mx-auto">
+          <p className="mt-4 text-lg text-gray-600 max-w-xl mx-auto">
             Her çeşidin kökeni, üretimi ve kalite süreci şeffaf.
           </p>
         </motion.div>
 
-        {/* Özellikler: cam efektli kartlar */}
+        {/* Özellikler: modern kartlar */}
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
           {items.map((it, idx) => (
             <motion.div
@@ -117,21 +99,23 @@ export default function Traceability() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: idx * 0.2, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 text-white transition-all duration-500 hover:bg-white/10 hover:shadow-2xl hover:border-white/30"
+              className="group relative overflow-hidden rounded-3xl border border-gray-200 bg-white p-8 shadow-md transition-all duration-500 hover:shadow-xl hover:border-transparent hover:ring-2 hover:ring-[#27ae60]/50"
             >
-              {/* üst marka şeridi */}
-              <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${it.gradient} opacity-80 group-hover:opacity-100 transition-opacity`} />
+              {/* Üst gradient şerit */}
+              <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${it.gradient}`} />
+
               <div className="flex items-start gap-4">
-                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${it.gradient} text-white shadow-xl ring-1 ring-white/20 group-hover:scale-105 transition-transform`}>
+                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${it.gradient} text-white shadow-lg group-hover:scale-105 transition-transform`}>
                   {it.icon}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-lg font-bold">{it.t}</p>
-                  <p className="text-base text-white/85 mt-2">{it.d}</p>
+                  <p className="text-lg font-bold text-gray-900">{it.t}</p>
+                  <p className="text-base text-gray-600 mt-2">{it.d}</p>
                 </div>
               </div>
-              {/* hover alt çizgi efekti */}
-              <div className={`pointer-events-none absolute inset-x-8 bottom-4 h-1 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-r ${it.gradient} blur-sm`} />
+
+              {/* Hover efekti: alt çizgi */}
+              <div className={`absolute inset-x-8 bottom-4 h-1 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-r ${it.gradient} blur-sm`} />
             </motion.div>
           ))}
         </div>

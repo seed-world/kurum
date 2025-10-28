@@ -1,5 +1,4 @@
-// src/lib/utils.ts
-import { ListOptions, Order } from "./types";
+import { ListOptions, OrderDirection } from "./types";
 
 /** Boşlukları normalize edip %...% LIKE için güvenli hale getirir */
 export function sanitizeLike(input?: string) {
@@ -26,10 +25,10 @@ export function paginate(opts?: ListOptions) {
 /** Sadece izin verilen alan adlarıyla ORDER BY üretir */
 export function orderBy(
   sort: string | undefined,
-  order: Order | undefined,
+  order: OrderDirection | undefined,
   allowed: readonly string[]
 ) {
-  const dir: Order = order === "desc" ? "desc" : "asc";
+  const dir: OrderDirection = order === "desc" ? "desc" : "asc";
   const col = allowed.includes(String(sort)) ? String(sort) : allowed[0];
   return { column: col, direction: dir };
 }
@@ -75,4 +74,33 @@ export function omit<T extends object, K extends keyof T>(obj: T, keys: K[]): Om
   const out: any = {};
   for (const k in obj) if (!keys.includes(k as unknown as K)) out[k] = (obj as any)[k];
   return out;
+}
+
+/* -------------------- ORDERS yardımcıları -------------------- */
+
+/** Para değerini 2 haneye yuvarla (float toplama hatalarını azalt) */
+export function money(n: number) {
+  return Math.round((Number(n) || 0) * 100) / 100;
+}
+
+/** Satır toplamını hesapla */
+export function lineTotal(unit_price: number, quantity: number) {
+  return money(unit_price * quantity);
+}
+
+/** Basit toplam hesap (kupon, kargo, vergi dışarıdan girilebilir) */
+export function calcTotals(
+  items: { unit_price: number; quantity: number }[],
+  opts?: {
+    discount_total?: number;
+    shipping_total?: number;
+    tax_total?: number;
+  }
+) {
+  const subtotal = money(items.reduce((a, it) => a + lineTotal(it.unit_price, it.quantity), 0));
+  const discount_total = money(opts?.discount_total ?? 0);
+  const shipping_total = money(opts?.shipping_total ?? 0);
+  const tax_total = money(opts?.tax_total ?? 0);
+  const grand_total = money(subtotal - discount_total + shipping_total + tax_total);
+  return { subtotal, discount_total, shipping_total, tax_total, grand_total };
 }

@@ -1,8 +1,7 @@
-// src/lib/types.ts
 import type { RowDataPacket } from "mysql2";
 
-/** Sıralama yönü */
-export type Order = "asc" | "desc";
+/** Sıralama yönü (önceki "Order" ad çakışmasını çözdük) */
+export type OrderDirection = "asc" | "desc";
 
 /* -------------------- CATEGORIES -------------------- */
 export interface CategoryRow extends RowDataPacket {
@@ -23,15 +22,12 @@ export type Category = {
   is_active: 0 | 1;
   created_at: string;
   updated_at: string;
-  /** opsiyonel: listelemede LEFT JOIN ile gelir */
   product_count?: number;
 };
 
 export type NewCategoryInput = Partial<
   Omit<Category, "id" | "created_at" | "updated_at" | "product_count">
-> & {
-  name: string;
-};
+> & { name: string };
 
 export type UpdateCategoryInput = Partial<
   Omit<Category, "id" | "created_at" | "updated_at" | "product_count">
@@ -65,9 +61,8 @@ export interface ProductRow extends RowDataPacket {
 
   category_id: number | null;
 
-  /* ⭐️ Özet alanlar */
-  rating_avg: number;   // DECIMAL(3,2)
-  rating_count: number; // INT
+  rating_avg: number;
+  rating_count: number;
 }
 
 export type Product = {
@@ -97,7 +92,6 @@ export type Product = {
 
   category_id: number | null;
 
-  /* ⭐️ */
   rating_avg: number;
   rating_count: number;
 };
@@ -156,7 +150,7 @@ export type UpdateReviewInput = Partial<
   Omit<NewReviewInput, "product_id"> & { status: Review["status"]; is_edited?: 0 | 1 }
 >;
 
-/* -------------------- CARTS (Yeni) -------------------- */
+/* -------------------- CARTS -------------------- */
 export interface CartRow extends RowDataPacket {
   id: number;
   user_id: number | null;
@@ -220,17 +214,163 @@ export type EnsureCartInput = {
 
 export type AddOrSetItemInput = {
   product_id: number;
-  quantity: number; // add: +n, set: mutlak n
-  unit_price?: number | null; // verilmezse products.seedling_unit_price
+  quantity: number;
+  unit_price?: number | null;
+};
+
+/* -------------------- ORDERS -------------------- */
+export type OrderStatus =
+  | "pending" | "paid" | "failed" | "cancelled" | "refunded" | "shipped" | "completed";
+
+export type CustomerType = "kurumsal" | "bireysel" | "katilimci";
+export type PaymentMethod = "kredi-karti" | "havale";
+
+export interface OrderDb extends RowDataPacket {
+  id: number;
+  order_number: string;           // <-- eklendi
+  user_id: number | null;
+  guest_key: string | null;
+  customer_type: CustomerType;
+  payment_method: PaymentMethod;
+  status: OrderStatus;
+  currency: string;
+
+  subtotal: number;
+  discount_total: number;
+  shipping_total: number;
+  tax_total: number;
+  grand_total: number;
+
+  company_title: string | null;
+  tax_number: string | null;
+  tax_office: string | null;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  address_text: string | null;
+  note: string | null;
+
+  payment_snapshot: any | null;
+  cart_id: number | null;
+  domain: string | null;
+
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderItemDb extends RowDataPacket {
+  id: number;
+  order_id: number;
+  product_id: number;
+  code: string | null;
+  title: string;
+  unit_price: number;
+  quantity: number;
+  currency: string;
+  line_total: number;
+  image_path: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type OrderItem = {
+  id: number;
+  order_id: number;
+  product_id: number;
+  code: string | null;
+  title: string;
+  unit_price: number;
+  quantity: number;
+  currency: string;
+  line_total: number;
+  image_path: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Order = {
+  id: number;
+  order_number: string;           // <-- eklendi
+  user_id: number | null;
+  guest_key: string | null;
+  customer_type: CustomerType;
+  payment_method: PaymentMethod;
+  status: OrderStatus;
+  currency: string;
+
+  subtotal: number;
+  discount_total: number;
+  shipping_total: number;
+  tax_total: number;
+  grand_total: number;
+
+  company_title: string | null;
+  tax_number: string | null;
+  tax_office: string | null;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  address_text: string | null;
+  note: string | null;
+
+  payment_snapshot: any | null;
+  cart_id: number | null;
+  domain: string | null;
+
+  created_at: string;
+  updated_at: string;
+
+  items?: OrderItem[];
+};
+
+/** Frontend’in POST edeceği payload */
+export type AppOrderCreateInput = {
+  user_id?: number | null;
+  guest_key?: string | null;
+
+  customer_type: CustomerType;
+  payment_method: PaymentMethod;
+  status?: OrderStatus;          // default: pending
+  currency?: string;             // default: TRY
+
+  subtotal: number;
+  discount_total?: number;
+  shipping_total?: number;
+  tax_total?: number;
+  grand_total: number;
+
+  company_title?: string | null;
+  tax_number?: string | null;
+  tax_office?: string | null;
+  contact_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address_text?: string | null;
+  note?: string | null;
+
+  payment_snapshot?: any | null;
+  cart_id?: number | null;
+  domain?: string | null;
+
+  items: Array<{
+    product_id: number;
+    code?: string | null;
+    title: string;
+    unit_price: number;
+    quantity: number;
+    currency?: string;
+    line_total: number;
+    image_path?: string | null;
+  }>;
 };
 
 /* -------------------- List/Pages -------------------- */
 export type ListOptions = {
-  page?: number;        // 1-based
-  limit?: number;       // default 20
-  search?: string;      // isim/email vb.
-  sort?: string;        // whitelist ile kullanılacak
-  order?: Order;
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort?: string;
+  order?: OrderDirection;
 };
 
 export type PagedResult<T> = {
@@ -240,11 +380,8 @@ export type PagedResult<T> = {
   total: number;
 };
 
-/* -------------------- Admin/User (değişmedi) -------------------- */
-export type DBError = {
-  code: string;
-  message: string;
-};
+/* -------------------- Admin/User -------------------- */
+export type DBError = { code: string; message: string };
 
 export interface AdminRow extends RowDataPacket {
   id: number;
@@ -274,8 +411,8 @@ export type Admin = {
   role: "superadmin" | "editor" | "viewer";
   password_hash: string | null;
   is_active: 0 | 1;
-  created_at: string; // ISO
-  updated_at: string; // ISO
+  created_at: string;
+  updated_at: string;
 };
 
 export type NewAdminInput = {
@@ -286,9 +423,7 @@ export type NewAdminInput = {
   is_active?: 0 | 1;
 };
 
-export type UpdateAdminInput = Partial<Omit<NewAdminInput, "email">> & {
-  email?: string;
-};
+export type UpdateAdminInput = Partial<Omit<NewAdminInput, "email">> & { email?: string };
 
 export type AppUser = {
   id: number;

@@ -250,33 +250,7 @@ export default function RandDPage() {
           </div>
         </section>
 
-        {/* SSS */}
-        <section className="mb-4">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">Sık Sorulan Sorular</h3>
-          <div className="space-y-3">
-            {FAQ.map((f, i) => (
-              <div
-                key={f.q}
-                className="rounded-2xl border-2 border-gray-200 bg-white shadow-sm"
-              >
-                <button
-                  className="w-full text-left px-4 py-3 flex items-center justify-between gap-3"
-                  onClick={() => setFaqOpen((x) => (x === i ? null : i))}
-                >
-                  <span className="font-semibold text-gray-900">{f.q}</span>
-                  <ChevronDown
-                    className={`h-4 w-4 text-gray-500 transition-transform ${
-                      faqOpen === i ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {faqOpen === i && (
-                  <p className="px-4 pb-4 text-sm text-gray-700">{f.a}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
+    
       </main>
     </div>
   );
@@ -417,17 +391,4 @@ const ROADMAP = [
   },
 ];
 
-const FAQ = [
-  {
-    q: "QR kod ile neleri görebilirim?",
-    a: "Çeşidin köken bilgisi, üretici/bölge, parti numarası, kalite test sonuçları ve yetiştirme rehberi.",
-  },
-  {
-    q: "Brix ölçümü nasıl yapılıyor?",
-    a: "Numune refraktometre ile ölçülür; saha ve laboratuvar değerleri eşleştirilir.",
-  },
-  {
-    q: "Organik/GAP denetimleri ne sıklıkta?",
-    a: "Yıl içinde planlı ve habersiz olmak üzere periyodik denetimler yapılır.",
-  },
-];
+

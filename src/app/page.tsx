@@ -6,6 +6,9 @@ import Participation from "@/components/home/Participation";
 import SalesChannels from "@/components/home/SalesChannels";
 import HomeCTA from "@/components/home/HomeCTA";
 import CategorySection from "@/components/home/CategorySection";
+import FeaturedProductsSection from "@/components/home/FeaturedProducts";
+import WhyGGSeedWorld from "@/components/home/WhyGGSeedWorld";
+import CustomerReviews from "@/components/home/CustomerReviews";
 
 export const metadata = {
   title: "Seed World | Ana Sayfa",
@@ -16,9 +19,11 @@ export default function HomePage() {
   return (
     <div>
       <Hero />
-      <Traceability />
       <CategorySection />
-      <SalesChannels />
+      <FeaturedProductsSection />
+      <Traceability />
+      <WhyGGSeedWorld />
+      <CustomerReviews />
       <HomeCTA />
     </div>
   );

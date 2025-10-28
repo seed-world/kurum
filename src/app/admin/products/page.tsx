@@ -477,95 +477,97 @@ export default function ProductsPage() {
         </form>
 
         <section className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-          <table className="min-w-full text-sm divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900 w-20">Aksiyon</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">ID</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Görsel</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Tür</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Çeşit</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Alt Tür</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Kod</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Bölge</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Yıl (Çim.)</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">2023</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">2024</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">2025 Bekl.</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Artış</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Fide ₺</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Varlık 2023</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Varlık 2024</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Varlık 2025</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Kategori</th>{/* ✅ */}
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Öne çıkan</th>
-                <th className="py-3 px-4 text-left font-semibold text-gray-900">Aktif</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {loading ? (
-                <tr><td className="py-4 px-4 text-center text-gray-500" colSpan={20}>Yükleniyor…</td></tr>
-              ) : list.data.length === 0 ? (
-                <tr><td className="py-4 px-4 text-center text-gray-500" colSpan={20}>Kayıt yok</td></tr>
-              ) : (
-                list.data.map((p, index) => (
-                  <tr key={p.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => onEditClick(p)}
-                          className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white w-8 h-8 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                          title="Düzenle"
-                          aria-label={`Ürünü düzenle #${p.id}`}
-                        >
-                          ✎
-                        </button>
-                        <button
-                          onClick={() => askDelete(p)}
-                          className="inline-flex items-center justify-center rounded-lg border border-red-300 bg-white w-8 h-8 text-xs font-medium text-red-600 hover:bg-red-50"
-                          title="Sil"
-                          aria-label={`Ürünü sil #${p.id}`}
-                        >
-                          🗑
-                        </button>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-gray-900">{p.id}</td>
-                    <td className="py-3 px-4">
-                      {p.image_path ? (
-                        <img
-                          src={p.image_path}
-                          alt={p.code}
-                          className="h-12 w-12 rounded object-cover border border-gray-200"
-                        />
-                      ) : <span className="text-gray-400">—</span>}
-                    </td>
-                    <td className="py-3 px-4 text-gray-900">{p.product_type}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.variety}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.sub_type ?? "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.code}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.region ?? "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.germination_start_year ?? "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.seeds_2023 ?? "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.seeds_2024 ?? "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.seeds_2025_expected ?? "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.annual_growth_factor ?? "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.seedling_unit_price ?? "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.asset_value_2023 ?? "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.asset_value_2024 ?? "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.asset_value_2025 ?? "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">
-                      {p.category_id
-                        ? (categories.find(c => c.id === p.category_id)?.name ?? `#${p.category_id}`)
-                        : "—"}
-                    </td>
-                    <td className="py-3 px-4 text-gray-900">{p.is_featured ? "★" : "-"}</td>
-                    <td className="py-3 px-4 text-gray-900">{p.is_active ? "✓" : "✗"}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900 w-20">Aksiyon</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">ID</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Görsel</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Tür</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Çeşit</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Alt Tür</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Kod</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Bölge</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Yıl (Çim.)</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">2023</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">2024</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">2025 Bekl.</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Artış</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Fide ₺</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Varlık 2023</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Varlık 2024</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Varlık 2025</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Kategori</th>{/* ✅ */}
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Öne çıkan</th>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-900">Aktif</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {loading ? (
+                  <tr><td className="py-4 px-4 text-center text-gray-500" colSpan={20}>Yükleniyor…</td></tr>
+                ) : list.data.length === 0 ? (
+                  <tr><td className="py-4 px-4 text-center text-gray-500" colSpan={20}>Kayıt yok</td></tr>
+                ) : (
+                  list.data.map((p, index) => (
+                    <tr key={p.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => onEditClick(p)}
+                            className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white w-8 h-8 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                            title="Düzenle"
+                            aria-label={`Ürünü düzenle #${p.id}`}
+                          >
+                            ✎
+                          </button>
+                          <button
+                            onClick={() => askDelete(p)}
+                            className="inline-flex items-center justify-center rounded-lg border border-red-300 bg-white w-8 h-8 text-xs font-medium text-red-600 hover:bg-red-50"
+                            title="Sil"
+                            aria-label={`Ürünü sil #${p.id}`}
+                          >
+                            🗑
+                          </button>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-900">{p.id}</td>
+                      <td className="py-3 px-4">
+                        {p.image_path ? (
+                          <img
+                            src={p.image_path}
+                            alt={p.code}
+                            className="h-12 w-12 rounded object-cover border border-gray-200"
+                          />
+                        ) : <span className="text-gray-400">—</span>}
+                      </td>
+                      <td className="py-3 px-4 text-gray-900">{p.product_type}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.variety}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.sub_type ?? "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.code}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.region ?? "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.germination_start_year ?? "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.seeds_2023 ?? "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.seeds_2024 ?? "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.seeds_2025_expected ?? "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.annual_growth_factor ?? "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.seedling_unit_price ?? "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.asset_value_2023 ?? "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.asset_value_2024 ?? "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.asset_value_2025 ?? "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">
+                        {p.category_id
+                          ? (categories.find(c => c.id === p.category_id)?.name ?? `#${p.category_id}`)
+                          : "—"}
+                      </td>
+                      <td className="py-3 px-4 text-gray-900">{p.is_featured ? "★" : "-"}</td>
+                      <td className="py-3 px-4 text-gray-900">{p.is_active ? "✓" : "✗"}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
           <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3">
             <div className="text-sm text-gray-700">Toplam: {list.total}</div>

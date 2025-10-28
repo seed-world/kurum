@@ -17,7 +17,18 @@ export async function GET(req: NextRequest) {
     const sort = searchParams.get("sort") ?? undefined;
     const order = (searchParams.get("order") ?? "asc") as any;
 
-    const result = await listProducts({ page, limit, search, sort, order });
+    // 🔥 kategori filtresini ekle
+    const category_id = searchParams.get("category_id");
+    const categoryIdNum = category_id ? Number(category_id) : undefined;
+
+    const result = await listProducts({
+      page,
+      limit,
+      search,
+      sort,
+      order,
+      category_id: Number.isFinite(categoryIdNum) ? categoryIdNum : undefined,
+    });
     return NextResponse.json(result);
   } catch (e: any) {
     console.error("GET /api/products failed:", e);
@@ -27,6 +38,7 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
 
 /** Yardımcı: image dosyasını public/urun/images/ altına yazar, public URL yolunu döner */
 async function saveImageToPublic(file: File): Promise<string> {

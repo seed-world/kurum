@@ -20,7 +20,9 @@ function normalizeUndefinedToNull<T extends object>(obj: T): T {
 }
 
 /** Listeleme (arama + sıralama + sayfalama) */
-export async function listProducts(opts?: ListOptions): Promise<PagedResult<Product>> {
+export async function listProducts(
+  opts?: ListOptions & { category_id?: number }
+): Promise<PagedResult<Product>> {
   const { page, limit, offset } = paginate(opts);
 
   const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(200, Number(limit))) : 20;
@@ -30,27 +32,32 @@ export async function listProducts(opts?: ListOptions): Promise<PagedResult<Prod
   const { column, direction } = orderBy(opts?.sort, opts?.order, [
     "id", "product_type", "variety", "region", "code", "created_at", "updated_at", "rating_avg", "rating_count"
   ]);
-
   const orderColumn = [
     "id", "product_type", "variety", "region", "code", "created_at", "updated_at", "rating_avg", "rating_count"
-  ].includes(column)
-    ? `p.${column}`
-    : "p.id";
+  ].includes(column) ? `p.${column}` : "p.id";
   const orderDir = (direction || "ASC").toUpperCase() === "DESC" ? "DESC" : "ASC";
 
-  const where = like
-    ? `WHERE (p.product_type LIKE :q ESCAPE '\\\\'
-          OR p.variety  LIKE :q ESCAPE '\\\\'
-          OR p.region   LIKE :q ESCAPE '\\\\'
-          OR p.code     LIKE :q ESCAPE '\\\\')`
-    : "";
+  // ✅ Dinamik WHERE
+  const whereParts: string[] = [];
+  const params: any = {};
 
-  const params: any = like ? { q: like } : {};
+  if (like) {
+    whereParts.push(`(p.product_type LIKE :q ESCAPE '\\\\'
+                  OR p.variety  LIKE :q ESCAPE '\\\\'
+                  OR p.region   LIKE :q ESCAPE '\\\\'
+                  OR p.code     LIKE :q ESCAPE '\\\\')`);
+    params.q = like;
+  }
+  if (Number.isFinite(opts?.category_id)) {
+    whereParts.push(`p.category_id = :cid`);
+    params.cid = Number(opts?.category_id);
+  }
+  const whereSql = whereParts.length ? `WHERE ${whereParts.join(" AND ")}` : "";
 
   const [rows] = await queryRows<ProductRow[]>(
     `
     SELECT * FROM products p
-    ${where}
+    ${whereSql}
     ORDER BY ${orderColumn} ${orderDir}
     LIMIT ${safeLimit} OFFSET ${safeOffset}
     `,
@@ -58,11 +65,16 @@ export async function listProducts(opts?: ListOptions): Promise<PagedResult<Prod
   );
 
   const [countRows] = await queryRows<any[]>(
-    `SELECT COUNT(*) AS total FROM products p ${where}`,
-    like ? { q: like } : {}
+    `SELECT COUNT(*) AS total FROM products p ${whereSql}`,
+    params
   );
 
-  return { data: rows as unknown as Product[], page, limit: safeLimit, total: Number(countRows[0]?.total ?? 0) };
+  return {
+    data: rows as unknown as Product[],
+    page,
+    limit: safeLimit,
+    total: Number(countRows[0]?.total ?? 0),
+  };
 }
 
 /** Tek ürün */

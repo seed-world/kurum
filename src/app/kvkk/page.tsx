@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -11,25 +10,19 @@ import {
   Mail,
   Building2,
   Info,
-  ChevronDown,
   CalendarDays,
   Globe2,
   Link as LinkIcon,
   ArrowUp,
+  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 
-/**
- * KVKK — Aydınlatma Metni (TR)
- * Not: Bu metin örnek/şablondur. Gerçek uygulama için hukuk danışmanınızla gözden geçirin.
- */
-
-const UPDATED = "25 Ekim 2025"; // gerektiğinde güncelleyin
+const UPDATED = "29 Ekim 2025";
 
 type SectionDef = { id: string; title: string; icon?: React.ReactNode };
 
 export default function KVKKPage() {
-  const [open, setOpen] = useState<number | null>(null);
-
   const sections: SectionDef[] = useMemo(
     () => [
       { id: "purpose", title: "Amaç ve Kapsam", icon: <Info className="h-5 w-5" /> },
@@ -46,7 +39,6 @@ export default function KVKKPage() {
     []
   );
 
-  // Aktif bölüm vurgusu (TOC için)
   const [activeId, setActiveId] = useState<string>(sections[0].id);
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -65,10 +57,9 @@ export default function KVKKPage() {
     return () => obs.disconnect();
   }, [sections]);
 
-  // "Yukarı" butonu görünürlüğü
   const [showTop, setShowTop] = useState(false);
   useEffect(() => {
-    const onScroll = () => setShowTop(window.scrollY > 400);
+    const onScroll = () => setShowTop(window.scrollY > 600);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -81,300 +72,182 @@ export default function KVKKPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-green-50/30 to-white">
-      {/* Üst gradient şerit (tüm sayfalarla uyumlu) */}
+    <div className="relative min-h-screen bg-gradient-to-b from-white via-[#f8fdf9] to-white overflow-hidden">
+      {/* Üst şerit */}
       <div
-        className="h-1 w-full"
+        className="absolute inset-x-0 top-0 h-1"
         style={{
           background:
             "linear-gradient(90deg,#1b7f3a 0%,#27ae60 35%,#f39c12 70%,#d35400 100%)",
         }}
       />
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-12 md:py-16">
+      {/* Arka plan animasyonlu dalga */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="wave" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+              <path
+                d="M0,50 Q25,30 50,50 T100,50"
+                fill="none"
+                stroke="#27ae60"
+                strokeWidth="1"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#wave)" />
+        </svg>
+      </div>
+
+      <main className="relative mx-auto w-full max-w-7xl px-4 py-16 md:py-24">
         {/* HERO + TOC */}
-        <section className="grid gap-8 md:grid-cols-[1fr_420px] md:items-start">
-          {/* Başlık */}
+        <motion.section
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="grid gap-10 md:grid-cols-[1fr_420px] md:items-start"
+        >
           <div>
-          
-            <h1 className="mt-4 text-4xl md:text-5xl font-bold leading-tight text-gray-900">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-5xl md:text-6xl font-extrabold leading-tight text-gray-900"
+            >
               Kişisel Verilerin Korunması
-              <span className="block mt-2 bg-gradient-to-r from-[#1b7f3a] via-[#27ae60] to-[#f39c12] bg-clip-text text-transparent">
+              <motion.span
+                initial={{ backgroundPosition: "0% 50%" }}
+                animate={{ backgroundPosition: "100% 50%" }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                className="block mt-3 bg-gradient-to-r from-[#1b7f3a] via-[#27ae60] to-[#f39c12] bg-clip-text text-transparent bg-[length:200%] animate-gradient"
+              >
                 Aydınlatma Metni
-              </span>
-            </h1>
+              </motion.span>
+            </motion.h1>
 
-            <p className="mt-4 text-lg text-gray-700 max-w-2xl">
-              Bu metin, 6698 sayılı KVK Kanunu uyarınca kişisel verilerin işlenmesine
-              ilişkin usul ve esaslar hakkında sizi bilgilendirmek amacıyla hazırlanmıştır.
-            </p>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="mt-6 text-lg md:text-xl text-gray-700 max-w-3xl leading-relaxed"
+            >
+              Bu metin, 6698 sayılı KVK Kanunu uyarınca kişisel verilerin işlenmesine ilişkin
+              usul ve esaslar hakkında <b>GG SeedWorld</b> ekosistemi kullanıcılarını bilgilendirmek için hazırlanmıştır.
+            </motion.p>
 
-            <div className="mt-4 flex items-center gap-2 text-xs text-gray-600" aria-live="polite">
-              <CalendarDays className="h-4 w-4 text-[#27ae60]" />
-              Son güncelleme: <span className="font-semibold text-gray-900">{UPDATED}</span>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="mt-6 flex items-center gap-3 text-sm text-gray-600"
+            >
+              <CalendarDays className="h-5 w-5 text-[#27ae60]" />
+              <span>Son güncelleme:</span>
+              <span className="font-bold text-gray-900">{UPDATED}</span>
+            </motion.div>
           </div>
 
-          {/* Yapışkan Hızlı Erişim */}
-          <aside className="md:sticky md:top-6">
-            <div className="rounded-3xl border-2 border-gray-200 bg-white p-6 shadow-lg">
-              <h3 className="text-lg font-bold text-gray-900">Hızlı Erişim</h3>
-              <ul className="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-1">
-                {sections.map((s) => (
-                  <li key={s.id}>
+          {/* Hızlı Erişim */}
+          <motion.aside
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.8 }}
+            className="md:sticky md:top-8"
+          >
+            <div className="rounded-3xl border-2 border-gray-200 bg-white/90 backdrop-blur-md p-7 shadow-xl ring-1 ring-[#27ae60]/10">
+              <h3 className="text-xl font-extrabold text-gray-900 flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-[#f39c12]" />
+                Hızlı Erişim
+              </h3>
+              <ul className="mt-5 space-y-2">
+                {sections.map((s, idx) => (
+                  <motion.li
+                    key={s.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.9 + idx * 0.05 }}
+                  >
                     <a
                       href={`#${s.id}`}
-                      className={`group flex items-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-300 ${
-                        activeId === s.id ? "ring-2 ring-emerald-300/60 border-transparent" : ""
+                      className={`group flex items-center gap-3 rounded-2xl p-3 transition-all duration-300 ${
+                        activeId === s.id
+                          ? "bg-gradient-to-r from-[#27ae60]/10 to-[#f39c12]/10 border-2 border-[#27ae60]/30 shadow-md"
+                          : "bg-white border-2 border-transparent hover:border-[#27ae60]/20 hover:shadow-sm"
                       }`}
                     >
-                      {s.icon ?? <Info className="h-4 w-4 text-[#27ae60]" />}
-                      <span className="truncate">{s.title}</span>
+                      <div className={`p-2 rounded-xl ${activeId === s.id ? "bg-[#27ae60] text-white" : "bg-gray-100 text-[#27ae60]"} transition-colors`}>
+                        {s.icon}
+                      </div>
+                      <span className={`font-medium ${activeId === s.id ? "text-[#1b7f3a]" : "text-gray-800"}`}>
+                        {s.title}
+                      </span>
                     </a>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
-              <div className="mt-4 flex flex-wrap gap-2 text-sm">
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.2 }}
+                className="mt-6 flex flex-col sm:flex-row gap-3"
+              >
                 <a
                   href="/documents/kvkk.pdf"
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1b7f3a] to-[#27ae60] px-4 py-2 text-white font-semibold shadow-md hover:shadow-lg"
                   target="_blank"
                   rel="noopener"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#1b7f3a] to-[#27ae60] px-5 py-3 text-white font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
                 >
-                  <FileText className="h-4 w-4" /> PDF İndir
+                  <FileText className="h-5 w-5" /> PDF İndir
                 </a>
                 <Link
                   href="/iletisim"
-                  className="inline-flex items-center gap-2 rounded-xl border-2 border-[#27ae60] bg-white/80 px-4 py-2 text-[#1b7f3a] font-semibold hover:bg-[#27ae60]/5"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-[#27ae60] bg-white px-5 py-3 text-[#1b7f3a] font-bold hover:bg-[#27ae60]/5 hover:scale-105 transition-all"
                 >
-                  <Mail className="h-4 w-4" /> Sorunuz mu var?
+                  <Mail className="h-5 w-5" /> Soru Sor
                 </Link>
-              </div>
+              </motion.div>
             </div>
-          </aside>
-        </section>
+          </motion.aside>
+        </motion.section>
 
         {/* CONTENT */}
-        <section className="mt-10 space-y-6">
-          <Glass id="purpose" title="Amaç ve Kapsam" onCopyLink={copyAnchor}>
-            GG SEED WORLD (“Şirket”), web sitemiz, mağaza ve iş süreçlerimiz kapsamında elde edilen
-            kişisel verileri; KVKK, ikincil mevzuat ve Kurul kararları çerçevesinde işlemektedir.
-            Bu metin, veri işleme faaliyetlerimizin kapsamını, amaçlarını ve haklarınızı açıklar.
-          </Glass>
-
-          <Glass
-            id="controller"
-            title="Veri Sorumlusu Bilgileri"
-            icon={<Building2 className="h-5 w-5 text-[#1b7f3a]" />}
-            onCopyLink={copyAnchor}
-          >
-            <ul className="list-disc pl-5 space-y-1 text-gray-700">
-              <li>Unvan: GG SEED WORLD (örnek)</li>
-              <li>Adres: İstanbul, Türkiye</li>
-              <li>
-                E-posta:{" "}
-                <a className="underline text-[#1b7f3a] font-semibold" href="mailto:info@ggseedworld.com">
-                  info@ggseedworld.com
-                </a>
-              </li>
-              <li>Telefon: 0216 755 88 50</li>
-            </ul>
-          </Glass>
-
-          <Glass
-            id="categories"
-            title="İşlenen Kişisel Veri Kategorileri"
-            icon={<Lock className="h-5 w-5 text-[#27ae60]" />}
-            onCopyLink={copyAnchor}
-          >
-            <ul className="grid gap-2 md:grid-cols-2 text-gray-700">
-              <li>
-                <b>Kimlik:</b> ad-soyad, TCKN/Vergi No (B2B), unvan
-              </li>
-              <li>
-                <b>İletişim:</b> e-posta, telefon, adres
-              </li>
-              <li>
-                <b>İşlem:</b> sipariş/ödeme/teslimat kayıtları
-              </li>
-              <li>
-                <b>Müşteri İşlem:</b> talep/şikayet, destek yazışmaları
-              </li>
-              <li>
-                <b>Pazarlama:</b> tercih, çerez verileri (aşağıda)
-              </li>
-              <li>
-                <b>Görsel/İşitsel:</b> çağrı/etkinlik görselleri (varsa)
-              </li>
-            </ul>
-          </Glass>
-
-          <Glass
-            id="legal"
-            title="İşleme Amaçları ve Hukuki Sebepler"
-            icon={<Info className="h-5 w-5 text-[#27ae60]" />}
-            onCopyLink={copyAnchor}
-          >
-            <p className="text-gray-700">
-              Kişisel verileriniz aşağıdaki amaçlarla ve KVKK m.5/2 veya m.6 hükümlerine dayanarak işlenmektedir:
-            </p>
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
-              <Card>
-                <h4 className="font-semibold text-gray-900">Sözleşmenin ifası / öncesi adımlar</h4>
-                <ul className="list-disc pl-5 text-sm space-y-1 text-gray-700">
-                  <li>Üyelik, mağaza sipariş ve teslimat süreçleri</li>
-                  <li>RFQ teklifi, tedarik & lojistik yönetimi</li>
-                </ul>
-              </Card>
-              <Card>
-                <h4 className="font-semibold text-gray-900">Hukuki yükümlülük</h4>
-                <ul className="list-disc pl-5 text-sm space-y-1 text-gray-700">
-                  <li>Finans/vergisel kayıtların tutulması</li>
-                  <li>Yetkili kurum taleplerine yanıt</li>
-                </ul>
-              </Card>
-              <Card>
-                <h4 className="font-semibold text-gray-900">Meşru menfaat</h4>
-                <ul className="list-disc pl-5 text-sm space-y-1 text-gray-700">
-                  <li>Dolandırıcılık/abuse önleme, güvenlik</li>
-                  <li>İş/iç denetim ve raporlama</li>
-                </ul>
-              </Card>
-              <Card>
-                <h4 className="font-semibold text-gray-900">Açık rıza (gerekli haller)</h4>
-                <ul className="list-disc pl-5 text-sm space-y-1 text-gray-700">
-                  <li>Elektronik ticari ileti izinleri</li>
-                  <li>Pazarlama amaçlı profil çıkarma/çerezler</li>
-                </ul>
-              </Card>
-            </div>
-          </Glass>
-
-          <Glass
-            id="share"
-            title="Aktarımlar ve Alıcı Grupları"
-            icon={<Globe2 className="h-5 w-5 text-[#f39c12]" />}
-            onCopyLink={copyAnchor}
-          >
-            <p className="text-gray-700">
-              Verileriniz, aşağıdaki alıcı gruplarıyla; KVKK m.8-9 hükümleri uyarınca, amaçla sınırlı ve gerekli güvenlik
-              önlemleri alınarak paylaşılabilir:
-            </p>
-            <ul className="list-disc pl-5 space-y-1 text-gray-700 mt-2">
-              <li>Yetkili kamu kurum ve kuruluşları</li>
-              <li>Lojistik, kargo ve depolama hizmet sağlayıcılar</li>
-              <li>Ödeme kuruluşları, bankalar, mali müşavirlik</li>
-              <li>BT/altyapı, bulut, güvenlik ve danışmanlık tedarikçileri</li>
-              <li>Pazarlama/iletişim hizmet sağlayıcılar (açık rıza varsa)</li>
-            </ul>
-            <p className="text-gray-500 text-xs mt-2">
-              Yurt dışına aktarım gereken durumlarda KVKK m.9/2 ve Kurul kararlarındaki şartlara uyulur.
-            </p>
-          </Glass>
-
-          <Glass
-            id="retention"
-            title="Saklama Süreleri"
-            icon={<CalendarDays className="h-5 w-5 text-[#27ae60]" />}
-            onCopyLink={copyAnchor}
-          >
-            <p className="text-gray-700">
-              Veriler, ilgili mevzuatta öngörülen süreler ve şirket politika/prosedürleri doğrultusunda saklanır.
-              Süre sona erdiğinde silme, yok etme veya anonim hale getirme yöntemleri uygulanır.
-            </p>
-          </Glass>
-
-          <Glass
-            id="rights"
-            title="KVKK Madde 11 Kapsamındaki Haklarınız"
-            icon={<ShieldCheck className="h-5 w-5 text-[#1b7f3a]" />}
-            onCopyLink={copyAnchor}
-          >
-            <ul className="list-disc pl-5 space-y-1 text-gray-700">
-              <li>İşlenip işlenmediğini öğrenme, bilgi talep etme</li>
-              <li>Amacına uygun kullanılıp kullanılmadığını öğrenme</li>
-              <li>Yurt içinde/dışında aktarılan üçüncü kişileri bilme</li>
-              <li>Eksik/yanlış işlenmişse düzeltilmesini isteme</li>
-              <li>KVKK’ya aykırı işlenmişse silinmesini/yok edilmesini isteme</li>
-              <li>Otomatik sistemlerle analiz sonucu aleyhe sonuca itiraz</li>
-              <li>Kanuna aykırı işleme nedeniyle zararın giderilmesini talep</li>
-            </ul>
-          </Glass>
-
-          <Glass
-            id="apply"
-            title="Başvuru Yöntemleri"
-            icon={<FileText className="h-5 w-5 text-[#f39c12]" />}
-            onCopyLink={copyAnchor}
-          >
-            <p className="text-gray-700">KVKK kapsamındaki taleplerinizi aşağıdaki yöntemlerle iletebilirsiniz:</p>
-            <ul className="list-disc pl-5 space-y-1 text-gray-700 mt-2">
-              <li>
-                E-posta:{" "}
-                <a className="underline text-[#1b7f3a] font-semibold" href="mailto:info@ggseedworld.com">
-                  info@ggseedworld.com
-                </a>
-              </li>
-              <li>Posta: İstanbul, Türkiye (Islak imzalı başvuru)</li>
-              <li>
-                Web:{" "}
-                <Link className="underline text-[#1b7f3a] font-semibold" href="/iletisim">
-                  İletişim Formu
-                </Link>
-              </li>
-            </ul>
-            <p className="text-gray-500 text-sm mt-2">
-              Başvurular, niteliğine göre en geç 30 gün içinde sonuçlandırılır. Ücret talep edilmesi halinde, KVK
-              Kurulu’nca belirlenen tarifeye uyulur.
-            </p>
-          </Glass>
-
-          <Glass
-            id="cookies"
-            title="Çerezler (Cookies)"
-            icon={<Info className="h-5 w-5 text-[#f39c12]" />}
-            onCopyLink={copyAnchor}
-          >
-            <p className="text-gray-700">
-              Sitemizde zorunlu çerezler (oturum/sayfa performansı) ve açık rızanıza bağlı pazarlama/analitik çerezler
-              kullanılabilir. Çerez tercihlerinizi tarayıcı ayarlarınızdan yönetebilir, rıza verebilir veya geri
-              alabilirsiniz. Detaylı politika için{" "}
-              <Link className="underline text-[#1b7f3a] font-semibold" href="/cerez-politikasi">
-                Çerez Politikası
-              </Link>{" "}
-              sayfasını ziyaret edin.
-            </p>
-          </Glass>
-
-          <Glass
-            id="security"
-            title="Güvenlik Önlemleri"
-            icon={<Lock className="h-5 w-5 text-[#27ae60]" />}
-            onCopyLink={copyAnchor}
-          >
-            <ul className="list-disc pl-5 space-y-1 text-gray-700">
-              <li>İdari: Erişim yetki matrisi, gizlilik sözleşmeleri, eğitim</li>
-              <li>Teknik: Şifreleme, TLS, güvenlik duvarı, loglama, yedekleme</li>
-              <li>Periyodik: Zafiyet taraması, denetimler, veri minimizasyonu</li>
-            </ul>
-          </Glass>
+        <section className="mt-16 space-y-8">
+          {sections.map((section, idx) => (
+            <motion.div
+              key={section.id}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: idx * 0.1 }}
+              viewport={{ once: true, margin: "-100px" }}
+            >
+              <Glass
+                id={section.id}
+                title={section.title}
+                icon={section.icon}
+                onCopyLink={copyAnchor}
+                isActive={activeId === section.id}
+              >
+                {getSectionContent(section.id)}
+              </Glass>
+            </motion.div>
+          ))}
         </section>
-
- 
       </main>
 
-      {/* Yukarı Çık Butonu */}
+      {/* Yukarı Çık */}
       <AnimatePresence>
         {showTop && (
           <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            whileHover={{ scale: 1.1 }}
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="fixed bottom-6 right-6 inline-flex items-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-lg hover:bg-gray-50"
+            className="fixed bottom-8 right-8 z-50 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#27ae60] to-[#1b7f3a] p-4 text-white shadow-2xl hover:shadow-[#27ae60]/50 transition-all"
             aria-label="Sayfa başına dön"
           >
-            <ArrowUp className="h-4 w-4 text-[#27ae60]" /> Yukarı
+            <ArrowUp className="h-6 w-6" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -382,69 +255,237 @@ export default function KVKKPage() {
   );
 }
 
-/* ----------------- Bileşenler ----------------- */
+/* ----------------- İçerik Fonksiyonu ----------------- */
+function getSectionContent(id: string) {
+  switch (id) {
+    case "purpose":
+      return (
+        <p className="text-gray-700 leading-relaxed">
+          GG SeedWorld (“Platform”) ve <b>Global Nexus Sağlık Kozmetik Gıda ve Ticaret A.Ş.</b> (“Şirket”)
+          kapsamında elde edilen kişisel veriler; KVKK, ikincil mevzuat ve Kurul kararları
+          doğrultusunda işlenir. Bu metin, veri işleme faaliyetlerimizin <b>kapsamını, amaçlarını ve haklarınızı</b> açıklar.
+        </p>
+      );
+
+    case "controller":
+      return (
+        <ul className="grid gap-3 md:grid-cols-2 text-gray-700">
+          <li className="flex items-start gap-2"><CheckCircle2 className="h-5 w-5 text-[#27ae60] mt-0.5 flex-shrink-0" /><span><b>Unvan:</b> Global Nexus Sağlık Kozmetik Gıda ve Ticaret A.Ş.</span></li>
+          <li className="flex items-start gap-2"><CheckCircle2 className="h-5 w-5 text-[#27ae60] mt-0.5 flex-shrink-0" /><span><b>MERSİS:</b> 0396168976800001</span></li>
+          <li className="flex items-start gap-2"><CheckCircle2 className="h-5 w-5 text-[#27ae60] mt-0.5 flex-shrink-0" /><span><b>Vergi Dairesi / No:</b> Avcılar / 3961689768</span></li>
+          <li className="flex items-start gap-2"><CheckCircle2 className="h-5 w-5 text-[#27ae60] mt-0.5 flex-shrink-0" /><span><b>Adres:</b> Üniversite Mah. Civan Sk. Allure Tower İstanbul Sitesi A Blok No:1 İç Kapı No:271 Avcılar / İstanbul</span></li>
+          <li className="flex items-start gap-2"><CheckCircle2 className="h-5 w-5 text-[#27ae60] mt-0.5 flex-shrink-0" /><span><b>Telefon:</b> 0216 755 88 50</span></li>
+          <li className="flex items-start gap-2"><CheckCircle2 className="h-5 w-5 text-[#27ae60] mt-0.5 flex-shrink-0" /><span><b>Web:</b> www.ggseedworld.com</span></li>
+          <li className="flex items-start gap-2"><CheckCircle2 className="h-5 w-5 text-[#27ae60] mt-0.5 flex-shrink-0" /><span><b>E-posta:</b> <a className="underline text-[#1b7f3a] font-bold" href="mailto:info@ggseedworld.com">info@ggseedworld.com</a></span></li>
+        </ul>
+      );
+
+    case "categories":
+      return (
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            { title: "Kimlik", items: ["ad-soyad", "TCKN/Vergi No (B2B)", "unvan"] },
+            { title: "İletişim", items: ["e-posta", "telefon", "adres"] },
+            { title: "İşlem", items: ["üyelik/sipariş", "ödeme", "teslimat kayıtları"] },
+            { title: "Müşteri İşlem", items: ["talep/şikâyet", "destek yazışmaları"] },
+            { title: "Pazarlama", items: ["tercih", "kampanya etkileşimi", "çerez verileri"] },
+            { title: "Görsel/İşitsel", items: ["çağrı/etkinlik görselleri (varsa)"] },
+          ].map((cat) => (
+            <div key={cat.title} className="rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-4">
+              <h4 className="font-bold text-[#1b7f3a]">{cat.title}</h4>
+              <ul className="mt-2 space-y-1 text-sm text-gray-700">
+                {cat.items.map((item) => (
+                  <li key={item} className="flex items-center gap-2">
+                    <div className="h-1 w-1 rounded-full bg-[#27ae60]" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "legal":
+      return (
+        <>
+          <p className="text-gray-700 mb-4">
+            Kişisel verileriniz aşağıdaki amaçlarla ve <b>KVKK m.5/2 veya m.6</b> hükümlerine dayanarak işlenir:
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              { title: "Sözleşmenin ifası / öncesi adımlar", items: ["Üyelik, sipariş, teslimat ve iade süreçleri", "Tedarik, lojistik ve müşteri destek operasyonları"] },
+              { title: "Hukuki yükümlülük", items: ["Finans/vergisel kayıtların tutulması", "Yetkili kurum taleplerine yanıt"] },
+              { title: "Meşru menfaat", items: ["Dolandırıcılık/abuse önleme, güvenlik", "İş/iç denetim, raporlama ve geliştirme"] },
+              { title: "Açık rıza (gerekli haller)", items: ["Elektronik ticari ileti izinleri", "Pazarlama amaçlı profil oluşturma/çerezler"] },
+            ].map((card) => (
+              <motion.div
+                key={card.title}
+                whileHover={{ scale: 1.02 }}
+                className="rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-all"
+              >
+                <h4 className="font-extrabold text-[#1b7f3a] text-lg">{card.title}</h4>
+                <ul className="mt-3 space-y-2 text-sm text-gray-700">
+                  {card.items.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-[#27ae60] mt-0.5 flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+          </div>
+        </>
+      );
+
+    case "share":
+      return (
+        <>
+          <p className="text-gray-700">
+            Verileriniz, KVKK m.8–9 uyarınca; amaçla sınırlı, ölçülü ve gerekli güvenlik tedbirleri alınarak aşağıdaki alıcı gruplarıyla paylaşılabilir:
+          </p>
+          <ul className="list-disc pl-5 space-y-1 text-gray-700 mt-3">
+            <li>Yetkili kamu kurum ve kuruluşları</li>
+            <li>Lojistik, kargo, depolama ve çağrı merkezi hizmet sağlayıcıları</li>
+            <li>Ödeme kuruluşları, bankalar, mali müşavirlik/denetim</li>
+            <li>BT, bulut, siber güvenlik ve danışmanlık tedarikçileri</li>
+            <li>Pazarlama/iletişim hizmet sağlayıcılar (açık rıza varsa)</li>
+          </ul>
+          <p className="text-xs text-gray-500 mt-2">
+            Yurt dışına aktarım gereken hallerde KVKK m.9/2 şartları ve Kurul kararlarına uyulur.
+          </p>
+        </>
+      );
+
+    case "retention":
+      return (
+        <>
+          <p className="text-gray-700">
+            Veriler, ilgili mevzuatta öngörülen süreler ve şirket içi saklama-imha politikaları doğrultusunda muhafaza edilir.
+            Süre sona erdiğinde veriler; <b>silme, yok etme veya anonim hale getirme</b> yöntemleriyle işlenemez hale getirilir.
+          </p>
+          <ul className="list-disc pl-5 space-y-1 text-gray-700 mt-3 text-sm">
+            <li>Finans/defter kayıtları: Vergi Usul Kanunu ve TTK süreleri</li>
+            <li>Sözleşme/işlem kayıtları: Zamanaşımı süreleri boyunca</li>
+            <li>Pazarlama iletileri: Rıza geri alınıncaya kadar veya azami saklama</li>
+          </ul>
+        </>
+      );
+
+    case "rights":
+      return (
+        <ul className="list-disc pl-5 space-y-1 text-gray-700">
+          <li>İşlenip işlenmediğini ve işlendi ise buna ilişkin bilgileri öğrenme</li>
+          <li>Amacına uygun kullanılıp kullanılmadığını öğrenme</li>
+          <li>Yurt içinde/dışında aktarılan üçüncü kişileri bilme</li>
+          <li>Eksik/yanlış işlenmişse düzeltilmesini isteme</li>
+          <li>KVKK’ya aykırı işlenmişse silinmesini/yok edilmesini isteme</li>
+          <li>Otomatik sistemlerle analiz sonucu aleyhe sonuca itiraz</li>
+          <li>Kanuna aykırı işleme nedeniyle zararın giderilmesini talep</li>
+        </ul>
+      );
+
+    case "apply":
+      return (
+        <>
+          <p className="text-gray-700">KVKK kapsamındaki taleplerinizi aşağıdaki yöntemlerle iletebilirsiniz:</p>
+          <ul className="list-disc pl-5 space-y-1 text-gray-700 mt-2">
+            <li>
+              E-posta:{" "}
+              <a className="underline text-[#1b7f3a] font-semibold" href="mailto:info@ggseedworld.com">
+                info@ggseedworld.com
+              </a>
+            </li>
+            <li>Posta: Üniversite Mah. Civan Sk. Allure Tower İstanbul Sitesi A Blok No:1 İç Kapı No:271 Avcılar / İstanbul</li>
+            <li>
+              Web:{" "}
+              <Link className="underline text-[#1b7f3a] font-semibold" href="/iletisim">
+                İletişim Formu
+              </Link>
+            </li>
+          </ul>
+          <p className="text-gray-500 text-sm mt-2">
+            Başvurular, niteliğine göre en geç 30 gün içinde sonuçlandırılır. Ücret talep edilmesi halinde KVK Kurulu tarifesi uygulanır.
+          </p>
+        </>
+      );
+
+    case "cookies":
+      return (
+        <p className="text-gray-700">
+          Sitemizde <b>zorunlu çerezler</b> (oturum/performance) ve açık rızanıza bağlı <b>analitik/pazarlama çerezleri</b> kullanılabilir.
+          Tarayıcı ayarlarınızdan çerez tercihlerinizi yönetebilir, rızayı verebilir veya geri alabilirsiniz.
+          Detaylar için{" "}
+          <Link className="underline text-[#1b7f3a] font-semibold" href="/cerez-politikasi">
+            Çerez Politikası
+          </Link>{" "}
+          sayfasını ziyaret edin.
+        </p>
+      );
+
+    case "security":
+      return (
+        <ul className="list-disc pl-5 space-y-1 text-gray-700">
+          <li>İdari: Erişim yetki matrisi, gizlilik sözleşmeleri, eğitim</li>
+          <li>Teknik: Şifreleme, TLS, güvenlik duvarı, loglama, yedekleme</li>
+          <li>Periyodik: Zafiyet taraması, denetimler, veri minimizasyonu</li>
+        </ul>
+      );
+
+    default:
+      return <p className="text-gray-700">İçerik yükleniyor...</p>;
+  }
+}
+
+/* ----------------- Glass Card ----------------- */
 function Glass({
   id,
   title,
   icon,
   children,
   onCopyLink,
+  isActive,
 }: {
   id?: string;
   title: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
   onCopyLink?: (id: string) => void;
+  isActive?: boolean;
 }) {
   return (
-    <section
+    <motion.section
       id={id}
-      className="rounded-3xl border-2 border-gray-200 bg-white p-6 md:p-7 shadow-lg scroll-mt-24"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true }}
+      className={`rounded-3xl border-2 p-7 md:p-8 shadow-xl transition-all duration-500 scroll-mt-32 ${
+        isActive
+          ? "border-[#27ae60]/40 bg-gradient-to-br from-white via-[#f8fdf9] to-white ring-2 ring-[#27ae60]/20"
+          : "border-gray-200 bg-white/90 backdrop-blur-sm"
+      }`}
       aria-labelledby={id ? `${id}-title` : undefined}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          {icon}
-          <h2 id={id ? `${id}-title` : undefined} className="text-lg md:text-xl font-bold text-gray-900">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <motion.div
+            animate={{ rotate: isActive ? 360 : 0 }}
+            transition={{ duration: 0.5 }}
+            className={`p-2 rounded-xl ${isActive ? "bg-[#27ae60] text-white" : "bg-gray-100 text-[#27ae60]"}`}
+          >
+            {icon}
+          </motion.div>
+          <h2 id={id ? `${id}-title` : undefined} className="text-xl md:text-2xl font-extrabold text-gray-900">
             {title}
           </h2>
         </div>
-        {id && (
-          <button
-            onClick={() => onCopyLink?.(id)}
-            className="inline-flex items-center gap-1 rounded-lg border-2 border-gray-200 bg-white px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
-            title="Bölüm bağlantısını kopyala"
-            aria-label={`${title} bölümü bağlantısını kopyala`}
-          >
-            <LinkIcon className="h-3.5 w-3.5 text-[#27ae60]" /> Kopyala
-          </button>
-        )}
+  
       </div>
-      <div className="mt-3 leading-relaxed text-gray-700 text-sm md:text-base">{children}</div>
-    </section>
+      <div className="mt-5 leading-relaxed text-gray-700 text-base md:text-lg">
+        {children}
+      </div>
+    </motion.section>
   );
 }
-
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl border-2 border-gray-200 bg-white p-4">
-      {children}
-    </div>
-  );
-}
-
-/* ----------------- SSS ----------------- */
-const FAQ = [
-  {
-    q: "Açık rızamı nasıl geri alırım?",
-    a: "İletişim kanallarımızdan bize ulaşarak veya çerez tercihlerinizi değiştirerek dilediğiniz zaman geri alabilirsiniz.",
-  },
-  {
-    q: "Veri aktarımı yurtdışına yapılıyor mu?",
-    a: "Bulut hizmetleri veya tedarikçilerimiz yurtdışında ise, KVKK m.9 kapsamındaki şartlar ve Kurul kararlarına uygun şekilde aktarım yapılabilir.",
-  },
-  {
-    q: "Verilerim ne kadar süre saklanır?",
-    a: "İlgili mevzuat ve şirket içi saklama/imha politikaları çerçevesinde gerekli süre kadar saklanır; süresi dolan veriler güvenli şekilde silinir veya anonim hale getirilir.",
-  },
-];

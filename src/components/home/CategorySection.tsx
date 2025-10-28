@@ -62,7 +62,7 @@ export default function CategorySection() {
   }, [cats]);
 
   return (
-    <section className="relative py-16 md:py-24 bg-gradient-to-b from-gray-50 to-white">
+    <section className="relative py-12 md:py-16 bg-gradient-to-b from-gray-50 to-white">
       <div className="mx-auto w-full max-w-7xl px-4">
         {/* Başlık satırı */}
         <div className="mb-8 flex items-end justify-between gap-4">
@@ -107,7 +107,8 @@ export default function CategorySection() {
           )}
 
           {!loading && !err && visible.map((c) => {
-            const href = `/magaza?category=${encodeURIComponent(slugify(c.name))}`;
+            const href = `/kategori-urunler?category=${encodeURIComponent(slugify(c.name))}`;
+
             return (
               <article
                 key={c.id}

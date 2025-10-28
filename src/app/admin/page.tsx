@@ -8,7 +8,6 @@ export default function AdminDashboardPage() {
   const stats = [
     { title: "Toplam Kullanıcı", value: "1,274" },
     { title: "Aktif Admin", value: "3" },
-    { title: "Bugünkü Ziyaret", value: "842" },
   ];
 
   const rows = [

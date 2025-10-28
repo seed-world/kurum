@@ -2,7 +2,8 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import {
   Leaf,
   Recycle,
@@ -18,18 +19,196 @@ import {
   CheckCircle2,
   CalendarDays,
   ChevronDown,
+  Info,
 } from "lucide-react";
 
-/**
- * SustainabilityPage — ışık tema uyumlu düzen:
- * - Üstte gradient şerit
- * - max-w-7xl kapsayıcı
- * - Beyaz kartlar, border-2, gölge
- * - Yeşil/amber gradient aksanlar
- */
+/* =========================================================
+   1) TEK NOKTA GERÇEK VERİ GİRİŞİ  (REAL)
+   - Buradaki alanları elindeki belgeler/kaynaklarla doldur.
+   - Değer yoksa value: null bırak; UI otomatik "Henüz yayımlanmadı" der.
+   ========================================================= */
+
+type KPIItem = {
+  key: string;
+  title: string;
+  unit: string;      // ör: "%", "MWh", "m³", "tCO₂e"
+  value: number | null;
+  year?: string;     // "2024" gibi
+  sourceName?: string;
+  sourceUrl?: string;
+};
+
+type InitiativeItem = {
+  icon: JSX.Element;
+  title: string;
+  desc: string;
+  sourceName?: string;
+  sourceUrl?: string;
+};
+
+type RoadmapItem = {
+  q: string;      // "2026 Q1"
+  title: string;
+  items: string[];
+};
+
+type CertItem = { name: string; url?: string };
+
+const REAL = {
+  hero: {
+    tagline: "Topraktan Başlayan",
+    headlineColor: "Döngüsel Değer",
+    image: "/images/sustainability-hero.jpg",
+    traceabilityNote: "%100 İzlenebilir",
+  },
+
+  // KPI’lar: Gerçek değerleri varsa doldur, yoksa null bırak.
+  kpis: [
+    {
+      key: "renewable_share",
+      title: "Yenilenebilir Enerji Payı",
+      unit: "%",
+      value: null,           // ÖRN GERÇEK: 62
+      year: undefined,       // ÖRN: "2024"
+      sourceName: undefined, // ÖRN: "Enerji Tüketim Raporu 2024"
+      sourceUrl: undefined,  // ÖRN: "https://…"
+    },
+    {
+      key: "water_saving",
+      title: "Su Tasarrufu",
+      unit: "%",
+      value: null,           // ÖRN: 31
+      year: undefined,
+      sourceName: undefined,
+      sourceUrl: undefined,
+    },
+    {
+      key: "recycling_ratio",
+      title: "Geri Dönüşüm Oranı",
+      unit: "%",
+      value: null,          // ÖRN: 92
+      year: undefined,
+      sourceName: undefined,
+      sourceUrl: undefined,
+    },
+    {
+      key: "carbon_intensity",
+      title: "Karbon Yoğunluğu Değişimi",
+      unit: "% (y/y)",
+      value: null,          // ÖRN: -18
+      year: undefined,
+      sourceName: undefined,
+      sourceUrl: undefined,
+    },
+  ] as KPIItem[],
+
+  // ESG sütunlarının gerçek açıklamaları – metinler genel prensiptir (sayı içermez).
+  esg: {
+    env: [
+      "Rejeneratif tarım uygulamaları (örtü bitkisi, münavebe, minimum toprak işleme)",
+      "Toprak sağlığı ve organik madde artışı programları",
+      "Su yönetimi (damla sulama, sensör tabanlı izleme, geri kazanım)",
+      "Tedarikte ve tesislerde yenilenebilir enerji tercihi",
+    ],
+    soc: [
+      "Üretici eğitimleri ve saha teknik destek",
+      "İş sağlığı ve güvenliği (İSG) protokolleri",
+      "Kooperatif ve çiftçilerle adil sözleşme modelleri",
+      "Toplumsal katkı ve yerel istihdam programları",
+    ],
+    gov: [
+      "Şeffaf tedarik zinciri ve QR doğrulama",
+      "Etik tedarikçi standartları (denetim/uyum)",
+      "Veri güvenliği ve KVKK uyumu",
+      "Bağımsız denetim ve raporlama",
+    ],
+  },
+
+  // Girişimler – metinler genel; varsa kaynak ekle.
+  initiatives: [
+    {
+      icon: <Sprout className="h-5 w-5 text-[#27ae60]" />,
+      title: "Rejeneratif Tarım",
+      desc: "Örtü bitkisi, münavebe ve minimum toprak işlemesi ile toprak sağlığını destekliyoruz.",
+    },
+    {
+      icon: <Droplets className="h-5 w-5 text-[#27ae60]" />,
+      title: "Su Yönetimi",
+      desc: "Damla sulama, sensör tabanlı izleme ve geri kazanım uygulamaları.",
+    },
+    {
+      icon: <Sun className="h-5 w-5 text-[#f39c12]" />,
+      title: "Yenilenebilir Enerji",
+      desc: "Tedarikte yeşil enerji tercihleri ve çatı GES projeleri.",
+    },
+    {
+      icon: <Recycle className="h-5 w-5 text-[#f39c12]" />,
+      title: "Döngüsel Paketleme",
+      desc: "Geri dönüştürülebilir ambalaj ve atık azaltım programları.",
+    },
+  ] as InitiativeItem[],
+
+  // SDG hizalaması – genel hedef başlıkları.
+  sdgs: [
+    "SDG 2: Sıfır Açlık",
+    "SDG 6: Temiz Su ve Sanitasyon",
+    "SDG 7: Erişilebilir ve Temiz Enerji",
+    "SDG 8: İnsana Yakışır İş ve Ekonomik Büyüme",
+    "SDG 12: Sorumlu Tüketim ve Üretim",
+    "SDG 13: İklim Eylemi",
+    "SDG 15: Karasal Yaşam",
+  ],
+
+  // Etki göstergeleri – değerler yoksa null bırak, grafik gizlenir.
+  impact: {
+    energyMWh: [
+      // { label: "2023", value: 100 },
+      // { label: "2024", value: 88 },
+      // { label: "2025", value: 80 },
+    ] as { label: string; value: number }[],
+    waterM3: [
+      // { label: "2023", value: 120 },
+      // { label: "2024", value: 95 },
+      // { label: "2025", value: 78 },
+    ] as { label: string; value: number }[],
+  },
+
+  // Sertifikalar – varsa link ekle
+  certs: [
+    { name: "ISO 14001" },
+    { name: "ISO 22000" },
+    { name: "HACCP" },
+    { name: "GLOBALG.A.P." },
+    { name: "İyi Tarım Uygulamaları" },
+  ] as CertItem[],
+
+  // Yol haritası – somut tarihler/veriler eline geçtikçe güncelle
+  roadmap: [
+    {
+      q: "2025–2026",
+      title: "Veri Altyapısı ve Denetim",
+      items: ["GHG kapsam 1–2 ölçüm kurulumu", "Tedarikçi veri toplama", "Bağımsız doğrulama planı"],
+    },
+    {
+      q: "2026",
+      title: "Kaynak Verimliliği",
+      items: ["Damla sulama kapsama artışı", "Ambalaj optimizasyonu", "Enerji verimli ekipman dönüşümü"],
+    },
+    {
+      q: "2027",
+      title: "Net-Sıfır Yolunda İvmelenme",
+      items: ["Yenilenebilir enerji payı artışı", "Lojistik optimizasyonu", "Kapsam 3 yol haritası"],
+    },
+  ] as RoadmapItem[],
+};
+
+/* =============================== SAYFA =============================== */
 
 export default function SustainabilityPage() {
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
+
+  // Sayfada hiç KPI değeri girilmemişse üstte uyarı bandı göster.
+  const hasAnyKPI = useMemo(() => REAL.kpis.some(k => k.value !== null), []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -43,15 +222,24 @@ export default function SustainabilityPage() {
       />
 
       <main className="mx-auto max-w-7xl px-4 py-12 md:py-16">
+
+        {!hasAnyKPI && (
+          <div className="mb-6 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 text-amber-900 flex items-start gap-3">
+            <Info className="h-5 w-5 mt-0.5" />
+            <div className="text-sm">
+              Bu sayfadaki metrikler yalnızca mevcut olduğunda gösterilir. Elindeki doğrulanmış değerleri
+              <b> REAL.kpis</b> alanına eklediğinde göstergeler otomatik güncellenecektir.
+            </div>
+          </div>
+        )}
+
         {/* HERO */}
         <section className="grid gap-10 md:grid-cols-2 md:items-center mb-12">
           <div>
-      
-
             <h1 className="mt-4 text-4xl md:text-5xl font-bold leading-tight text-gray-900">
-              Topraktan Başlayan
+              {REAL.hero.tagline}
               <span className="block mt-2 bg-gradient-to-r from-[#1b7f3a] via-[#27ae60] to-[#f39c12] bg-clip-text text-transparent">
-                Döngüsel Değer
+                {REAL.hero.headlineColor}
               </span>
             </h1>
 
@@ -62,21 +250,21 @@ export default function SustainabilityPage() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2">
-              <Pill icon={<ShieldCheck className="h-4 w-4" />} text="ESG Uyumlu" color="green" />
-              <Pill icon={<BadgeCheck className="h-4 w-4" />} text="Bağımsız Denetim" color="green" />
+              <Pill icon={<ShieldCheck className="h-4 w-4" />} text="ESG Prensipleri" color="green" />
+              <Pill icon={<BadgeCheck className="h-4 w-4" />} text="Denetlenebilir Yapı" color="green" />
               <Pill icon={<Globe2 className="h-4 w-4" />} text="SDG Hizalaması" color="amber" />
             </div>
           </div>
 
           <div className="relative h-72 md:h-96 rounded-3xl overflow-hidden border-2 border-gray-200 shadow-2xl">
             <Image
-              src="/images/sustainability-hero.jpg"
+              src={REAL.hero.image}
               alt="Sürdürülebilirlik hero"
               fill
               className="object-cover"
             />
             <div className="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-xl bg-white/95 backdrop-blur px-4 py-2 border-2 border-gray-200 text-sm font-semibold text-gray-900 shadow-lg">
-              <CheckCircle2 className="h-4 w-4 text-[#27ae60]" /> %100 İzlenebilir
+              <CheckCircle2 className="h-4 w-4 text-[#27ae60]" /> {REAL.hero.traceabilityNote}
             </div>
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1b7f3a] via-[#27ae60] to-[#f39c12]" />
           </div>
@@ -84,39 +272,32 @@ export default function SustainabilityPage() {
 
         {/* KPI Cards */}
         <section className="mb-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <KPI icon={<Wind className="h-5 w-5" />} title="Yenilenebilir Enerji" value="%60" sub="Üretim tesisleri" />
-          <KPI icon={<Droplets className="h-5 w-5" />} title="Su Tasarrufu" value="%35" sub="Damla sulama / sensör" />
-          <KPI icon={<Recycle className="h-5 w-5" />} title="Geri Dönüşüm Oranı" value="%92" sub="Paketleme hattı" />
-          <KPI icon={<Factory className="h-5 w-5" />} title="Karbon Yoğunluğu" value="-18%" sub="Yıl bazlı azaltım" />
+          {REAL.kpis.map((k) => (
+            <KPI
+              key={k.key}
+              icon={iconForKPI(k.key)}
+              title={k.title}
+              value={k.value}
+              unit={k.unit}
+              year={k.year}
+              sourceName={k.sourceName}
+              sourceUrl={k.sourceUrl}
+            />
+          ))}
         </section>
 
         {/* ESG Sütunları */}
         <section className="mb-12 grid gap-6 md:grid-cols-3">
           <InfoCard icon={<Leaf className="h-5 w-5 text-white" />} title="Çevresel (E)" gradient="green">
-            <ul className="space-y-2 text-gray-700">
-              <li>• Rejeneratif tarım uygulamaları</li>
-              <li>• Toprak sağlığı ve organik madde artışı</li>
-              <li>• Su yönetimi ve verimlilik</li>
-              <li>• Yenilenebilir enerji kullanımı</li>
-            </ul>
+            <BulletList items={REAL.esg.env} />
           </InfoCard>
 
           <InfoCard icon={<Users className="h-5 w-5 text-white" />} title="Sosyal (S)" gradient="amber">
-            <ul className="space-y-2 text-gray-700">
-              <li>• Üretici eğitimleri ve teknik destek</li>
-              <li>• İş sağlığı ve güvenliği protokolleri</li>
-              <li>• Kooperatiflerle adil sözleşmeler</li>
-              <li>• Toplumsal katkı programları</li>
-            </ul>
+            <BulletList items={REAL.esg.soc} />
           </InfoCard>
 
           <InfoCard icon={<ShieldCheck className="h-5 w-5 text-white" />} title="Yönetişim (G)" gradient="green">
-            <ul className="space-y-2 text-gray-700">
-              <li>• Şeffaf tedarik zinciri ve QR doğrulama</li>
-              <li>• Etik tedarikçi standartları</li>
-              <li>• Veri güvenliği ve KVKK uyumu</li>
-              <li>• Bağımsız denetim ve raporlama</li>
-            </ul>
+            <BulletList items={REAL.esg.gov} />
           </InfoCard>
         </section>
 
@@ -127,7 +308,7 @@ export default function SustainabilityPage() {
             <h3 className="text-2xl font-bold text-gray-900">Sürdürülebilirlik Girişimleri</h3>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {INITIATIVES.map((i) => (
+            {REAL.initiatives.map((i) => (
               <Initiative key={i.title} {...i} />
             ))}
           </div>
@@ -139,7 +320,7 @@ export default function SustainabilityPage() {
             BM Sürdürülebilir Kalkınma Amaçları (SDGs) ile Hizalama
           </h3>
           <div className="mt-4 flex flex-wrap gap-2 text-xs">
-            {SDGS.map((s) => (
+            {REAL.sdgs.map((s) => (
               <span
                 key={s}
                 className="rounded-lg px-2.5 py-1 font-semibold"
@@ -158,22 +339,16 @@ export default function SustainabilityPage() {
 
         {/* Etki Göstergeleri */}
         <section className="mb-12 grid gap-6 md:grid-cols-2">
-          <BarCard
-            title="Yıllık Enerji Tüketimi (MWh)"
-            bars={[
-              { label: "2023", value: 100 },
-              { label: "2024", value: 88 },
-              { label: "2025", value: 80 },
-            ]}
-          />
-          <BarCard
-            title="Tatlı Su Kullanımı (m³)"
-            bars={[
-              { label: "2023", value: 120 },
-              { label: "2024", value: 95 },
-              { label: "2025", value: 78 },
-            ]}
-          />
+          {REAL.impact.energyMWh.length > 0 ? (
+            <BarCard title="Yıllık Enerji Tüketimi (MWh)" bars={REAL.impact.energyMWh} />
+          ) : (
+            <PlaceholderCard title="Yıllık Enerji Tüketimi (MWh)" />
+          )}
+          {REAL.impact.waterM3.length > 0 ? (
+            <BarCard title="Tatlı Su Kullanımı (m³)" bars={REAL.impact.waterM3} />
+          ) : (
+            <PlaceholderCard title="Tatlı Su Kullanımı (m³)" />
+          )}
         </section>
 
         {/* Sertifikalar */}
@@ -183,12 +358,18 @@ export default function SustainabilityPage() {
             <h3 className="text-2xl font-bold text-gray-900">Sertifikalar & Standartlar</h3>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            {CERTS.map((c, i) => (
+            {REAL.certs.map((c, i) => (
               <div
                 key={i}
                 className="group aspect-[3/2] rounded-2xl border-2 border-gray-200 bg-white hover:border-[#27ae60] hover:shadow-lg transition flex items-center justify-center text-sm font-semibold text-gray-700"
               >
-                {c}
+                {c.url ? (
+                  <Link href={c.url} className="underline underline-offset-2" target="_blank">
+                    {c.name}
+                  </Link>
+                ) : (
+                  c.name
+                )}
               </div>
             ))}
           </div>
@@ -201,7 +382,7 @@ export default function SustainabilityPage() {
             <h3 className="text-2xl font-bold text-gray-900">Net-Sıfır Yol Haritası</h3>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
-            {ROADMAP.map((r) => (
+            {REAL.roadmap.map((r) => (
               <div
                 key={r.q}
                 className="rounded-3xl border-2 border-gray-200 bg-white p-6 shadow-md"
@@ -220,40 +401,12 @@ export default function SustainabilityPage() {
             ))}
           </div>
         </section>
-
-        {/* SSS */}
-        <section>
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">Sık Sorulan Sorular</h3>
-          <div className="space-y-3">
-            {FAQ.map((f, i) => (
-              <div
-                key={f.q}
-                className="rounded-2xl border-2 border-gray-200 bg-white shadow-sm"
-              >
-                <button
-                  className="w-full text-left px-4 py-3 flex items-center justify-between gap-3"
-                  onClick={() => setFaqOpen((x) => (x === i ? null : i))}
-                >
-                  <span className="font-semibold text-gray-900">{f.q}</span>
-                  <ChevronDown
-                    className={`h-4 w-4 text-gray-500 transition-transform ${
-                      faqOpen === i ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {faqOpen === i && (
-                  <p className="px-4 pb-4 text-sm text-gray-700">{f.a}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
     </div>
   );
 }
 
-/* ---------------- Küçük Bileşenler ---------------- */
+/* ============================= Bileşenler ============================= */
 
 function Pill({
   icon,
@@ -278,17 +431,34 @@ function Pill({
   );
 }
 
+function BulletList({ items }: { items: string[] }) {
+  return (
+    <ul className="space-y-2 text-gray-700">
+      {items.map((t) => (
+        <li key={t}>• {t}</li>
+      ))}
+    </ul>
+  );
+}
+
 function KPI({
   icon,
   title,
   value,
-  sub,
+  unit,
+  year,
+  sourceName,
+  sourceUrl,
 }: {
   icon: React.ReactNode;
   title: string;
-  value: string;
-  sub?: string;
+  value: number | null;
+  unit: string;
+  year?: string;
+  sourceName?: string;
+  sourceUrl?: string;
 }) {
+  const hasValue = value !== null && value !== undefined;
   return (
     <div className="rounded-3xl border-2 border-gray-200 bg-white p-6 shadow-md">
       <div className="flex items-center gap-2 text-gray-800">
@@ -297,8 +467,33 @@ function KPI({
         </span>
         <span className="text-sm font-semibold">{title}</span>
       </div>
-      <div className="mt-2 text-3xl font-extrabold text-gray-900">{value}</div>
-      {sub && <div className="text-xs text-gray-500 mt-1">{sub}</div>}
+
+      <div className="mt-2 text-3xl font-extrabold text-gray-900">
+        {hasValue ? (
+          <>
+            {value}
+            <span className="text-base font-bold text-gray-600 ml-1">{unit}</span>
+          </>
+        ) : (
+          <span className="text-base font-semibold text-gray-500">Henüz yayımlanmadı</span>
+        )}
+      </div>
+
+      <div className="mt-1 text-xs text-gray-500 flex items-center gap-2">
+        {year && <span>Yıl: {year}</span>}
+        {sourceName && (
+          <>
+            <span>•</span>
+            {sourceUrl ? (
+              <Link className="underline underline-offset-2" href={sourceUrl} target="_blank">
+                {sourceName}
+              </Link>
+            ) : (
+              <span>{sourceName}</span>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -336,11 +531,9 @@ function Initiative({
   icon,
   title,
   desc,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-}) {
+  sourceName,
+  sourceUrl,
+}: InitiativeItem) {
   return (
     <div className="group relative overflow-hidden rounded-3xl border-2 border-gray-200 bg-white p-6 shadow-md hover:shadow-lg transition-all">
       <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#f39c12]/10 to-[#d35400]/10 border border-[#f39c12]/30">
@@ -348,6 +541,27 @@ function Initiative({
       </div>
       <h4 className="mt-3 font-bold text-gray-900">{title}</h4>
       <p className="text-sm text-gray-700 mt-1">{desc}</p>
+      {sourceName && (
+        <p className="mt-2 text-xs text-gray-500">
+          Kaynak:{" "}
+          {sourceUrl ? (
+            <Link href={sourceUrl} className="underline underline-offset-2" target="_blank">
+              {sourceName}
+            </Link>
+          ) : (
+            sourceName
+          )}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function PlaceholderCard({ title }: { title: string }) {
+  return (
+    <div className="rounded-3xl border-2 border-dashed border-gray-300 bg-white p-6 text-gray-600">
+      <h4 className="font-semibold text-gray-900 mb-2">{title}</h4>
+      <p className="text-sm">Grafik için henüz açıklanmış veri bulunmuyor.</p>
     </div>
   );
 }
@@ -359,7 +573,7 @@ function BarCard({
   title: string;
   bars: { label: string; value: number }[];
 }) {
-  const max = Math.max(...bars.map((b) => b.value || 1));
+  const max = Math.max(...bars.map((b) => (b.value ?? 0)), 1);
   return (
     <div className="rounded-3xl border-2 border-gray-200 bg-white p-6 shadow-md">
       <h4 className="font-semibold text-gray-900">{title}</h4>
@@ -383,74 +597,17 @@ function BarCard({
   );
 }
 
-/* ---------------- Dummy Data ---------------- */
-
-const INITIATIVES = [
-  {
-    icon: <Sprout className="h-5 w-5 text-[#27ae60]" />,
-    title: "Rejeneratif Tarım",
-    desc: "Örtü bitkisi, münavebe ve minimum toprak işlemesi ile toprak sağlığını destekliyoruz.",
-  },
-  {
-    icon: <Droplets className="h-5 w-5 text-[#27ae60]" />,
-    title: "Su Yönetimi",
-    desc: "Damla sulama, sensör tabanlı izleme ve geri kazanım uygulamaları.",
-  },
-  {
-    icon: <Sun className="h-5 w-5 text-[#f39c12]" />,
-    title: "Yenilenebilir Enerji",
-    desc: "Tesis çatılarında GES ve tedarikte yeşil enerji sözleşmeleri.",
-  },
-  {
-    icon: <Recycle className="h-5 w-5 text-[#f39c12]" />,
-    title: "Döngüsel Paketleme",
-    desc: "Geri dönüştürülebilir/kompostlanabilir malzeme kullanımı ve atık azaltım programı.",
-  },
-];
-
-const SDGS = [
-  "SDG 2: Sıfır Açlık",
-  "SDG 6: Temiz Su ve Sanitasyon",
-  "SDG 7: Erişilebilir ve Temiz Enerji",
-  "SDG 8: İnsana Yakışır İş ve Ekonomik Büyüme",
-  "SDG 12: Sorumlu Tüketim ve Üretim",
-  "SDG 13: İklim Eylemi",
-  "SDG 15: Karasal Yaşam",
-];
-
-const CERTS = [
-  "Organik Sertifika",
-  "GLOBALG.A.P.",
-  "ISO 14001",
-  "ISO 22000",
-  "HACCP",
-  "İyi Tarım",
-  "Fair Trade",
-  "Non-GMO",
-  "Yerel Tohum Kayıt",
-  "Laboratuvar Akreditasyon",
-];
-
-const ROADMAP = [
-  {
-    q: "2025 Q4",
-    title: "Enerji Verimliliği 2. Faz",
-    items: ["GES kapasite artışı", "Soğuk depo ısı geri kazanım", "LED dönüşümü"],
-  },
-  {
-    q: "2026 Q1",
-    title: "Su Pozitif Operasyonlar",
-    items: ["Gri su geri kazanım", "Yağmur suyu hasadı", "Sulama optimizasyonu"],
-  },
-  {
-    q: "2026 Q2",
-    title: "Atık Sıfır Hedefi",
-    items: ["Paketleme yeniden tasarım", "Organik atık kompost", "Tedarikçi eğitimleri"],
-  },
-];
-
-const FAQ = [
-  { q: "Verileri nasıl doğruluyorsunuz?", a: "Üçüncü taraf denetimler, QR tabanlı kayıtlar ve iç denetim prosedürleri ile çapraz doğrulama yapılır." },
-  { q: "Karbon ayak izini nasıl hesaplıyorsunuz?", a: "GHG Protokol metodolojisi kullanılır; kapsam 1-2 zorunlu, kapsam 3 kademeli olarak eklenir." },
-  { q: "Çiftçilere ne tür destek sağlıyorsunuz?", a: "Eğitim, sertifikasyon rehberliği, finansmana erişim ve hasat garantisi modelleri uygulanır." },
-];
+function iconForKPI(key: string) {
+  switch (key) {
+    case "renewable_share":
+      return <Wind className="h-5 w-5" />;
+    case "water_saving":
+      return <Droplets className="h-5 w-5" />;
+    case "recycling_ratio":
+      return <Recycle className="h-5 w-5" />;
+    case "carbon_intensity":
+      return <Factory className="h-5 w-5" />;
+    default:
+      return <Leaf className="h-5 w-5" />;
+  }
+}
