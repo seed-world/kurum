@@ -1,20 +1,20 @@
-"use client";
-
-import { useSearchParams } from "next/navigation";
-import UrunDetay from "./UrunDetay";
+// app/magaza/urun-detay/page.tsx
+import { Suspense } from "react";
+import UrunDetayWrapper from "./UrunDetayWrapper";
 
 export default function Page() {
-  const sp = useSearchParams();
-  const idParam = sp.get("id") ?? "";
-  const id = /^\d+$/.test(idParam) ? Number(idParam) : null;
-
-  if (id === null) {
-    return (
-      <div className="mx-auto max-w-5xl p-6 text-red-700 bg-red-50 border border-red-200 rounded-2xl">
-        Geçersiz ürün bağlantısı (id eksik veya hatalı).
-      </div>
-    );
-  }
-
-  return <UrunDetay id={id} />;
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-white">
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-lg font-medium text-gray-700">Ürün yükleniyor...</p>
+          </div>
+        </div>
+      }
+    >
+      <UrunDetayWrapper />
+    </Suspense>
+  );
 }

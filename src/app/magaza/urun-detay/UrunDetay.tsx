@@ -1,3 +1,4 @@
+// app/magaza/urun-detay/UrunDetay.tsx
 "use client";
 
 import { useEffect, useState } from "react";
