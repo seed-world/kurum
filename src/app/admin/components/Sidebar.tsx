@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Users, Package, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Package, LogOut } from "lucide-react";
 
 export default function Sidebar() {
   const router = useRouter();
