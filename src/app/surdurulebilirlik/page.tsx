@@ -39,7 +39,7 @@ type KPIItem = {
 };
 
 type InitiativeItem = {
-  icon: JSX.Element;
+  icon: React.ReactNode; // DÜZELTME: JSX.Element → React.ReactNode
   title: string;
   desc: string;
   sourceName?: string;
@@ -68,16 +68,16 @@ const REAL = {
       key: "renewable_share",
       title: "Yenilenebilir Enerji Payı",
       unit: "%",
-      value: null,           // ÖRN GERÇEK: 62
-      year: undefined,       // ÖRN: "2024"
-      sourceName: undefined, // ÖRN: "Enerji Tüketim Raporu 2024"
-      sourceUrl: undefined,  // ÖRN: "https://…"
+      value: null,
+      year: undefined,
+      sourceName: undefined,
+      sourceUrl: undefined,
     },
     {
       key: "water_saving",
       title: "Su Tasarrufu",
       unit: "%",
-      value: null,           // ÖRN: 31
+      value: null,
       year: undefined,
       sourceName: undefined,
       sourceUrl: undefined,
@@ -86,7 +86,7 @@ const REAL = {
       key: "recycling_ratio",
       title: "Geri Dönüşüm Oranı",
       unit: "%",
-      value: null,          // ÖRN: 92
+      value: null,
       year: undefined,
       sourceName: undefined,
       sourceUrl: undefined,
@@ -95,7 +95,7 @@ const REAL = {
       key: "carbon_intensity",
       title: "Karbon Yoğunluğu Değişimi",
       unit: "% (y/y)",
-      value: null,          // ÖRN: -18
+      value: null,
       year: undefined,
       sourceName: undefined,
       sourceUrl: undefined,
@@ -161,16 +161,8 @@ const REAL = {
 
   // Etki göstergeleri – değerler yoksa null bırak, grafik gizlenir.
   impact: {
-    energyMWh: [
-      // { label: "2023", value: 100 },
-      // { label: "2024", value: 88 },
-      // { label: "2025", value: 80 },
-    ] as { label: string; value: number }[],
-    waterM3: [
-      // { label: "2023", value: 120 },
-      // { label: "2024", value: 95 },
-      // { label: "2025", value: 78 },
-    ] as { label: string; value: number }[],
+    energyMWh: [] as { label: string; value: number }[],
+    waterM3: [] as { label: string; value: number }[],
   },
 
   // Sertifikalar – varsa link ekle
