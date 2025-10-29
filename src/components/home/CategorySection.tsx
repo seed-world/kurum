@@ -1,3 +1,4 @@
+// src/components/home/CategorySection.tsx
 "use client";
 
 import Link from "next/link";
@@ -23,8 +24,12 @@ function slugify(input: string) {
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ı/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g")
-    .replace(/ç/g, "c").replace(/ö/g, "o").replace(/ü/g, "u")
+    .replace(/ı/g, "i")
+    .replace(/ş/g, "s")
+    .replace(/ğ/g, "g")
+    .replace(/ç/g, "c")
+    .replace(/ö/g, "o")
+    .replace(/ü/g, "u")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
 }
@@ -40,7 +45,9 @@ export default function CategorySection() {
       setLoading(true);
       setErr("");
       try {
-        const res = await fetch("/api/category?limit=12&sort=created_at&order=desc", { cache: "no-store" });
+        const res = await fetch("/api/category?limit=12&sort=created_at&order=desc", {
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error(`Kategori listesi alınamadı (${res.status})`);
         const json = (await res.json()) as Paged<Category>;
         const active = (json.data || []).filter((c) => c.is_active === 1);
@@ -52,13 +59,15 @@ export default function CategorySection() {
         if (!abort) setLoading(false);
       }
     })();
-    return () => { abort = true; };
+    return () => {
+      abort = true;
+    };
   }, []);
 
   const visible = useMemo(() => {
-    const otherVeg = cats.find(c => c.name === "Diğer Sebzeler");
-    const others = cats.filter(c => c.name !== "Diğer Sebzeler");
-    return [...others.slice(0, 11), otherVeg].filter(Boolean).slice(0, 12);
+    const otherVeg = cats.find((c) => c.name === "Diğer Sebzeler");
+    const others = cats.filter((c) => c.name !== "Diğer Sebzeler");
+    return [...others.slice(0, 11), otherVeg].filter((c): c is Category => !!c).slice(0, 12);
   }, [cats]);
 
   return (
@@ -106,6 +115,7 @@ export default function CategorySection() {
             </div>
           )}
 
+          {/* DÜZELTME: c.name güvenli erişim */}
           {!loading && !err && visible.map((c) => {
             const href = `/kategori-urunler?category=${encodeURIComponent(slugify(c.name))}`;
 
@@ -129,20 +139,16 @@ export default function CategorySection() {
                     </div>
                   )}
 
-                  {/* Ürün sayısı rozeti (sol üst) */}
+                  {/* Ürün sayısı rozeti */}
                   <div className="absolute left-3 top-3 z-10 rounded-full bg-black/70 text-white text-xs font-semibold px-3 py-1">
                     {(c.product_count ?? 0).toLocaleString("tr-TR")} ürün
                   </div>
 
                   {/* OVERLAY İçerik */}
                   <div className="absolute inset-0 flex flex-col justify-end">
-                    {/* üstten transparan → alta koyulaşan maske */}
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
-                    {/* Başlık + açıklama */}
-                    <div
-                      className="relative z-10 px-6 pt-10 pb-4 text-white transition-transform duration-300 translate-y-6 group-hover:-translate-y-1"
-                    >
+                    <div className="relative z-10 px-6 pt-10 pb-4 text-white transition-transform duration-300 translate-y-6 group-hover:-translate-y-1">
                       <h3 className="text-lg font-bold drop-shadow-md line-clamp-1">{c.name}</h3>
                       {c.description && (
                         <p className="mt-1 text-sm text-white/90 line-clamp-2 drop-shadow">
@@ -151,12 +157,10 @@ export default function CategorySection() {
                       )}
                     </div>
 
-                    {/* CTA – başlangıçta gizli, hover’da alttan gelir */}
                     <div className="relative z-10 px-6 pb-6">
                       <Link
                         href={href}
-                        className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#27ae60] to-[#1b7f3a] px-6 py-3 text-sm font-medium text-white shadow-md transition-all hover:from-[#1b7f3a] hover:to-[#27ae60] hover:shadow-lg
-                        opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 duration-300"
+                        className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#27ae60] to-[#1b7f3a] px-6 py-3 text-sm font-medium text-white shadow-md transition-all hover:from-[#1b7f3a] hover:to-[#27ae60] hover:shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 duration-300"
                       >
                         Ürünleri Gör
                       </Link>
