@@ -4,13 +4,15 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Star, ShoppingCart, ChevronRight, X, Eye, MapPin } from "lucide-react";
-import type { JSX } from "react";
+import { Star, ShoppingCart, X, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/components/cart/CartProvider";
 
 type Category = {
-  id: number; name: string; image_path: string | null; description: string | null;
+  id: number;
+  name: string;
+  image_path: string | null;
+  description: string | null;
 };
 
 type ApiProduct = {
@@ -56,20 +58,34 @@ type Paged<T> = { data: T[]; page: number; limit: number; total: number };
 
 function slugify(input: string) {
   return input
-    .toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ç/g,"c").replace(/ö/g,"o").replace(/ü/g,"u")
-    .replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)+/g,"");
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/ş/g, "s")
+    .replace(/ğ/g, "g")
+    .replace(/ç/g, "c")
+    .replace(/ö/g, "o")
+    .replace(/ü/g, "u")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
 }
+
 function fmtNumber(val: unknown) {
   if (val === null || val === undefined || val === "") return "—";
   if (typeof val === "number") return Intl.NumberFormat("tr-TR").format(val);
   return String(val);
 }
+
 function fmtPrice(n?: number | null) {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
-  const formatted = Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+  const formatted = Intl.NumberFormat("tr-TR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n);
   return `${formatted} ₺`;
 }
+
 function fmtYear(n?: number | null) {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
   return String(Math.trunc(Number(n)));
@@ -79,7 +95,11 @@ function fmtYear(n?: number | null) {
 function mapApiToShop(p: ApiProduct): Product | null {
   if (p.is_active === 0) return null;
   const title = [p.product_type, p.variety].filter(Boolean).join(" • ");
-  const subtitle = p.sub_type || p.region || (p.code ? `Kod: ${p.code}` : undefined) || undefined;
+  const subtitle =
+    p.sub_type ||
+    p.region ||
+    (p.code ? `Kod: ${p.code}` : undefined) ||
+    undefined;
   const price =
     typeof p.seedling_unit_price === "number" && !Number.isNaN(p.seedling_unit_price)
       ? Number(p.seedling_unit_price)
@@ -90,7 +110,9 @@ function mapApiToShop(p: ApiProduct): Product | null {
   if (p.sub_type) badges.push(p.sub_type);
   if (p.germination_start_year) badges.push(String(p.germination_start_year));
   const rating = Number.isFinite(p.rating_avg as number) ? Number(p.rating_avg) : 0;
-  const ratingCount = Number.isFinite(p.rating_count as number) ? Number(p.rating_count) : 0;
+  const ratingCount = Number.isFinite(p.rating_count as number)
+    ? Number(p.rating_count)
+    : 0;
 
   return {
     id: `db-${p.id}`,
@@ -114,7 +136,10 @@ function Stars({
   showLabel = true,
   count,
 }: {
-  value: number; size?: number; showLabel?: boolean; count?: number;
+  value: number;
+  size?: number;
+  showLabel?: boolean;
+  count?: number;
 }) {
   const safe = Math.max(0, Math.min(5, Number(value) || 0));
   const pct = (safe / 5) * 100;
@@ -129,10 +154,17 @@ function Stars({
       >
         <div className="absolute inset-0 flex">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Star key={`g-${i}`} className="w-[inherit] h-[inherit] text-gray-300" style={{ width: size, height: size }} />
+            <Star
+              key={`g-${i}`}
+              className="w-[inherit] h-[inherit] text-gray-300"
+              style={{ width: size, height: size }}
+            />
           ))}
         </div>
-        <div className="absolute inset-0 overflow-hidden" style={{ width: `${pct}%` }}>
+        <div
+          className="absolute inset-0 overflow-hidden"
+          style={{ width: `${pct}%` }}
+        >
           <div className="flex">
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
@@ -147,71 +179,96 @@ function Stars({
       {showLabel && (
         <span className="text-sm text-gray-700">
           {safe.toFixed(1)}
-          {typeof count === "number" ? <span className="text-gray-500"> ({Intl.NumberFormat("tr-TR").format(count)})</span> : null}
+          {typeof count === "number" ? (
+            <span className="text-gray-500">
+              {" "}
+              ({Intl.NumberFormat("tr-TR").format(count)})
+            </span>
+          ) : null}
         </span>
       )}
     </div>
   );
 }
 
+/* ---------------- SAYFA ---------------- */
 export default function MagazaPage() {
   const sp = useSearchParams();
   const wantedSlug = (sp.get("category") || "").trim();
 
-  const [cats,setCats] = useState<Category[]>([]);
-  const [catLoading,setCatLoading]=useState(true);
-  const [catErr,setCatErr]=useState("");
+  const [cats, setCats] = useState<Category[]>([]);
+  const [catLoading, setCatLoading] = useState(true);
+  const [catErr, setCatErr] = useState("");
 
-  const [prods,setProds] = useState<ApiProduct[]>([]);
-  const [loading,setLoading] = useState(false);
-  const [err,setErr] = useState("");
+  const [prods, setProds] = useState<ApiProduct[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
 
   const [quickId, setQuickId] = useState<string | null>(null);
 
-  const { addItem } = useCart(); // Düzeltilmiş: addItem olarak değiştirildi, orijinal ShopPage ile uyumlu
+  const { addItem } = useCart();
 
-  // 1) kategorileri çek → slug ile eşle
-  useEffect(()=>{
-    let abort=false;
-    (async()=>{
-      setCatLoading(true); setCatErr("");
-      try{
-        const res=await fetch("/api/category?limit=999&order=asc",{cache:"no-store"});
-        const j=await res.json() as Paged<Category>;
-        if(!abort) setCats(j.data||[]);
-      }catch(e:any){ if(!abort) setCatErr(e?.message||"Kategori hatası"); }
-      finally{ if(!abort) setCatLoading(false); }
+  // 1) Kategorileri çek
+  useEffect(() => {
+    let abort = false;
+    (async () => {
+      setCatLoading(true);
+      setCatErr("");
+      try {
+        const res = await fetch("/api/category?limit=999&order=asc", {
+          cache: "no-store",
+        });
+        const j = (await res.json()) as Paged<Category>;
+        if (!abort) setCats(j.data || []);
+      } catch (e: any) {
+        if (!abort) setCatErr(e?.message || "Kategori hatası");
+      } finally {
+        if (!abort) setCatLoading(false);
+      }
     })();
-    return ()=>{abort=true};
-  },[]);
+    return () => {
+      abort = true;
+    };
+  }, []);
 
-  const activeCategory = useMemo(()=>{
-    if(!wantedSlug) return null;
-    return cats.find(c=>slugify(c.name)===wantedSlug) || null;
-  },[cats,wantedSlug]);
+  const activeCategory = useMemo(() => {
+    if (!wantedSlug) return null;
+    return cats.find((c) => slugify(c.name) === wantedSlug) || null;
+  }, [cats, wantedSlug]);
 
-  // 2) ürünleri kategori_id ile çek
-  useEffect(()=>{
-    if(!activeCategory) return;
-    let abort=false;
-    (async()=>{
-      setLoading(true); setErr("");
-      try{
-        const res=await fetch(`/api/products?limit=24&order=desc&sort=created_at&category_id=${activeCategory.id}`,{cache:"no-store"});
-        if(!res.ok) throw new Error(`Ürün listesi alınamadı (${res.status})`);
-        const j=await res.json() as Paged<ApiProduct>;
-        if(!abort) setProds(j.data||[]);
-      }catch(e:any){ if(!abort) setErr(e?.message||"Ürünler yüklenemedi"); }
-      finally{ if(!abort) setLoading(false); }
+  // 2) Ürünleri kategori_id ile çek
+  useEffect(() => {
+    if (!activeCategory) return;
+    let abort = false;
+    (async () => {
+      setLoading(true);
+      setErr("");
+      try {
+        const res = await fetch(
+          `/api/products?limit=24&order=desc&sort=created_at&category_id=${activeCategory.id}`,
+          { cache: "no-store" }
+        );
+        if (!res.ok) throw new Error(`Ürün listesi alınamadı (${res.status})`);
+        const j = (await res.json()) as Paged<ApiProduct>;
+        if (!abort) setProds(j.data || []);
+      } catch (e: any) {
+        if (!abort) setErr(e?.message || "Ürünler yüklenemedi");
+      } finally {
+        if (!abort) setLoading(false);
+      }
     })();
-    return ()=>{abort=true};
-  },[activeCategory]);
+    return () => {
+      abort = true;
+    };
+  }, [activeCategory]);
 
-  const products = useMemo(() => prods.map(mapApiToShop).filter((x): x is Product => !!x), [prods]);
+  const products = useMemo(
+    () => prods.map(mapApiToShop).filter((x): x is Product => !!x),
+    [prods]
+  );
 
   const quick = products.find((p) => p.id === quickId) || null;
 
-  // Sepete ekle fonksiyonu, ShopPage ile uyumlu
   function addToCart(p: Product) {
     addItem({
       productId: p.raw.id,
@@ -235,46 +292,64 @@ export default function MagazaPage() {
               {activeCategory?.description || "Seçilen kategoriye ait ürünler listelenir."}
             </p>
           </div>
-          <Link href="/magaza" className="inline-flex items-center rounded-xl bg-gradient-to-r from-[#27ae60] to-[#1b7f3a] px-6 py-3 text-sm font-medium text-white hover:from-[#1b7f3a] hover:to-[#27ae60] transition-all shadow-md hover:shadow-lg">
+          <Link
+            href="/magaza"
+            className="inline-flex items-center rounded-xl bg-gradient-to-r from-[#27ae60] to-[#1b7f3a] px-6 py-3 text-sm font-medium text-white hover:from-[#1b7f3a] hover:to-[#27ae60] transition-all shadow-md hover:shadow-lg"
+          >
             Tüm Kategoriler
           </Link>
         </div>
 
-        {/* Grid / içerik */}
-        {catLoading && <div className="text-gray-500 text-center py-20">Kategoriler yükleniyor…</div>}
+        {/* Kategori yükleniyor / bulunamadı */}
+        {catLoading && (
+          <div className="text-gray-500 text-center py-20">
+            Kategoriler yükleniyor…
+          </div>
+        )}
         {!catLoading && wantedSlug && !activeCategory && (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-red-700 text-center">
             Aranan kategori bulunamadı.
           </div>
         )}
 
+        {/* Ürünler */}
         {activeCategory && (
           <div>
             {loading && (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {Array.from({length:12}).map((_,i)=>(
-                  <div key={i} className="h-full rounded-2xl border bg-white p-4 animate-pulse shadow-sm">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-full rounded-2xl border bg-white p-4 animate-pulse shadow-sm"
+                  >
                     <div className="aspect-[4/3] bg-gray-100 rounded-xl" />
-                    <div className="mt-4 h-6 bg-gray-100 rounded w-2/3"/>
-                    <div className="mt-2 h-4 bg-gray-100 rounded w-1/3"/>
-                    <div className="mt-4 h-10 bg-gray-100 rounded-xl"/>
+                    <div className="mt-4 h-6 bg-gray-100 rounded w-2/3" />
+                    <div className="mt-2 h-4 bg-gray-100 rounded w-1/3" />
+                    <div className="mt-4 h-10 bg-gray-100 rounded-xl" />
                   </div>
                 ))}
               </div>
             )}
 
             {!loading && err && (
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-red-700 text-center">{err}</div>
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-red-700 text-center">
+                {err}
+              </div>
             )}
 
-            {!loading && !err && (
-              products.length ? (
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {products.map(p=>(
-                    <ProductCard key={p.id} p={p} onAdd={() => addToCart(p)} onQuick={() => setQuickId(p.id)} />
-                  ))}
-                </div>
-              ) : (
+            {!loading && !err && products.length ? (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {products.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    p={p}
+                    onAdd={() => addToCart(p)}
+                    onQuick={() => setQuickId(p.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              !loading && (
                 <div className="rounded-2xl border border-gray-200 bg-white p-8 text-gray-600 text-center">
                   Bu kategoride ürün bulunamadı.
                 </div>
@@ -283,11 +358,19 @@ export default function MagazaPage() {
           </div>
         )}
 
-        {/* Quick View Dialog - ShopPage ile aynı */}
+        {/* Quick View Dialog */}
         <AnimatePresence>
           {quick && (
-            <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={() => setQuickId(null)} />
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div
+                className="absolute inset-0 bg-black/50 backdrop-blur-md"
+                onClick={() => setQuickId(null)}
+              />
               <motion.div
                 initial={{ y: 50, opacity: 0, scale: 0.95 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -298,16 +381,22 @@ export default function MagazaPage() {
                 {/* Header */}
                 <div className="flex-shrink-0 flex items-start justify-between p-4 sm:p-6 border-b border-gray-100/50 bg-gradient-to-b from-white to-gray-50">
                   <div className="flex-1 min-w-0 pr-8">
-                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate tracking-tight">{quick.title}</h3>
+                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate tracking-tight">
+                      {quick.title}
+                    </h3>
                     <div className="mt-2">
                       <Stars value={quick.rating} count={quick.ratingCount} size={16} />
                     </div>
                   </div>
                   <div className="hidden lg:block space-y-3">
                     <div className="flex items-center flex-wrap gap-3">
-                      <span className="text-3xl font-bold text-[#27ae60]">{fmtPrice(quick.price)}</span>
+                      <span className="text-3xl font-bold text-[#27ae60]">
+                        {fmtPrice(quick.price)}
+                      </span>
                       {quick.compareAt && quick.compareAt > quick.price && (
-                        <span className="text-base text-gray-500 line-through">{fmtPrice(quick.compareAt)}</span>
+                        <span className="text-base text-gray-500 line-through">
+                          {fmtPrice(quick.compareAt)}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -324,7 +413,7 @@ export default function MagazaPage() {
                 <div className="flex-1 overflow-y-auto">
                   <div className="p-4 sm:p-6">
                     <div className="grid gap-6 lg:grid-cols-2">
-                      {/* Sol Kolon - Görsel */}
+                      {/* Görsel */}
                       <div className="flex flex-col gap-4">
                         {quick.imageUrl ? (
                           <img
@@ -343,7 +432,7 @@ export default function MagazaPage() {
                         )}
                       </div>
 
-                      {/* Sağ Kolon - Detaylar */}
+                      {/* Detaylar */}
                       <div className="flex flex-col gap-6">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {(
@@ -357,15 +446,24 @@ export default function MagazaPage() {
                               ["Öne Çıkan", quick.featured ? "Evet" : "Hayır"],
                             ] as Array<[string, any]>
                           ).map(([label, value]) => (
-                            <div key={label} className="rounded-xl border border-gray-200/50 bg-gradient-to-br from-gray-50/50 to-white/50 p-4 hover:border-[#27ae60]/40 hover:shadow-md transition-all">
-                              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</div>
-                              <div className="text-base font-bold text-gray-900 mt-1 truncate">{value ?? "—"}</div>
+                            <div
+                              key={label}
+                              className="rounded-xl border border-gray-200/50 bg-gradient-to-br from-gray-50/50 to-white/50 p-4 hover:border-[#27ae60]/40 hover:shadow-md transition-all"
+                            >
+                              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                {label}
+                              </div>
+                              <div className="text-base font-bold text-gray-900 mt-1 truncate">
+                                {value ?? "—"}
+                              </div>
                             </div>
                           ))}
                         </div>
 
                         <div>
-                          <h4 className="text-base font-bold text-gray-900 mb-4 uppercase tracking-wide border-b border-gray-200/50 pb-2">Detaylı Bilgiler</h4>
+                          <h4 className="text-base font-bold text-gray-900 mb-4 uppercase tracking-wide border-b border-gray-200/50 pb-2">
+                            Detaylı Bilgiler
+                          </h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {(
                               [
@@ -379,9 +477,16 @@ export default function MagazaPage() {
                                 ["Değer 2025", fmtPrice(quick.raw.asset_value_2025)],
                               ] as Array<[string, any]>
                             ).map(([label, value]) => (
-                              <div key={label} className="rounded-xl border border-gray-200/50 bg-gradient-to-br from-gray-50/50 to-white/50 p-4 hover:border-[#27ae60]/40 hover:shadow-md transition-all">
-                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</div>
-                                <div className="text-base font-bold text-gray-900 mt-1 truncate">{value ?? "—"}</div>
+                              <div
+                                key={label}
+                                className="rounded-xl border border-gray-200/50 bg-gradient-to-br from-gray-50/50 to-white/50 p-4 hover:border-[#27ae60]/40 hover:shadow-md transition-all"
+                              >
+                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                  {label}
+                                </div>
+                                <div className="text-base font-bold text-gray-900 mt-1 truncate">
+                                  {value ?? "—"}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -396,9 +501,7 @@ export default function MagazaPage() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={() => {
-                        if (quick) {
-                          addToCart(quick);
-                        }
+                        if (quick) addToCart(quick);
                         setQuickId(null);
                       }}
                       className="cursor-pointer flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#27ae60] to-[#1b7f3a] text-white px-6 py-3 text-sm font-semibold hover:shadow-xl hover:scale-[1.02] transition-all shadow-md"
@@ -417,11 +520,19 @@ export default function MagazaPage() {
   );
 }
 
-/* ---------------- UI Bits ---------------- */
-function ProductCard({ p, onAdd, onQuick }: { p: Product; onAdd: () => void; onQuick: () => void }) {
+/* ---------------- Ürün Kartı ---------------- */
+function ProductCard({
+  p,
+  onAdd,
+  onQuick,
+}: {
+  p: Product;
+  onAdd: () => void;
+  onQuick: () => void;
+}) {
   return (
     <article className="group relative h-full overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all hover:shadow-xl hover:border-[#27ae60]/30">
-      {/* Görsel alanı */}
+      {/* Görsel */}
       <div className="relative">
         {p.imageUrl ? (
           <img
@@ -452,9 +563,11 @@ function ProductCard({ p, onAdd, onQuick }: { p: Product; onAdd: () => void; onQ
         <div className="absolute inset-0 flex flex-col justify-end">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
-          {/* Metinler */}
+          {/* Metin */}
           <div className="relative z-10 px-6 pt-10 pb-4 text-white transition-transform duration-300 translate-y-6 group-hover:-translate-y-1">
-            <h3 className="text-lg font-bold drop-shadow-md line-clamp-1">{p.title}</h3>
+            <h3 className="text-lg font-bold drop-shadow-md line-clamp-1">
+              {p.title}
+            </h3>
             {p.subtitle && (
               <p className="mt-1 text-sm text-white/90 line-clamp-2 drop-shadow">
                 {p.subtitle}
@@ -478,8 +591,7 @@ function ProductCard({ p, onAdd, onQuick }: { p: Product; onAdd: () => void; onQ
               <Link
                 href={`/magaza/urun-detay?id=${encodeURIComponent(p.raw.id)}`}
                 prefetch
-                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#27ae60] to-[#1b7f3a] px-4 py-2 text-sm font-medium text-white shadow-md transition-all hover:from-[#1b7f3a] hover:to-[#27ae60] hover:shadow-lg
-                           opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 duration-300"
+                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#27ae60] to-[#1b7f3a] px-4 py-2 text-sm font-medium text-white shadow-md transition-all hover:from-[#1b7f3a] hover:to-[#27ae60] hover:shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 duration-300"
               >
                 Detaylı İncele
               </Link>
