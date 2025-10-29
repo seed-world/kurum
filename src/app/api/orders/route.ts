@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listOrders, createOrder, parseListOptions } from "@/lib/routes/orders";
 import type { AppOrderCreateInput } from "@/lib/types";
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
     try {
