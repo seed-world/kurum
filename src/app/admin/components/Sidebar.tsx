@@ -43,13 +43,7 @@ export default function Sidebar() {
           <Package className="h-5 w-5" />
           Ürünler
         </a>
-        <a
-          href="/admin/settings"
-          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-[#27ae60] rounded-lg transition-colors"
-        >
-          <Settings className="h-5 w-5" />
-          Ayarlar
-        </a>
+ 
       </nav>
       <button
         onClick={logout}
