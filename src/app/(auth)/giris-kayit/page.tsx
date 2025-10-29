@@ -3,15 +3,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Mail, Lock, User, Leaf, Shield, Globe, ArrowRight } from "lucide-react";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const isLogin = mode === "login";
 
-  // Gelişmiş animasyon varyantları
-  const panelVariants = {
+  // DÜZELTİLMİŞ: panelVariants - TypeScript uyumlu
+  const panelVariants: Variants = {
     initial: (direction: number) => ({
       opacity: 0,
       x: 60 * direction,
@@ -23,16 +23,23 @@ export default function AuthPage() {
       x: 0,
       scale: 1,
       filter: "blur(0px)",
-      transition: { type: "spring", stiffness: 130, damping: 18 },
+      transition: {
+        type: "spring",
+        stiffness: 130,
+        damping: 18,
+      },
     },
     exit: (direction: number) => ({
       opacity: 0,
       x: -60 * direction,
       scale: 0.95,
       filter: "blur(8px)",
-      transition: { duration: 0.22, ease: "easeIn" },
+      transition: {
+        duration: 0.22,
+        ease: "easeIn" as const, // 'as const' ile tipi daralt
+      },
     }),
-  } as const;
+  };
 
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-neutral-950">
@@ -199,7 +206,6 @@ function LoginForm() {
       <Field label="Şifre" name="password" type="password" icon={<Lock size={20} />} />
 
       <div className="flex items-center justify-end text-sm">
- 
         <Link href="/sifre-sifirla" className="text-[#27ae60] hover:text-white transition-colors font-medium">
           Şifremi unuttum
         </Link>
