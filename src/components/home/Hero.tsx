@@ -1,9 +1,32 @@
-"use client"
+// src/components/home/Hero.tsx
+"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import Section from "./Section";
+
+// Section bileşeni
+type SectionProps = {
+  children: React.ReactNode;
+  className?: string;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+};
+
+function Section({ children, className, onMouseEnter, onMouseLeave }: SectionProps) {
+  return (
+    <section
+      className={className}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      {children}
+    </section>
+  );
+}
+
+// TitleSpan için izin verilen varyantlar
+type TitleVariant = "default" | "gradient" | "accent";
 
 export default function Hero() {
   const slides = useMemo(
@@ -14,11 +37,11 @@ export default function Hero() {
         titleLines: [
           {
             text: "ATA TOHUMU",
-            variant: "default",
+            variant: "default" as TitleVariant,
           },
           {
             text: "TİCARETİNDE DÜNYA LİDERİ",
-            variant: "gradient",
+            variant: "gradient" as TitleVariant,
           },
         ],
         subtitle: "Heirloom çeşitler • İzlenebilir tedarik • Yerel tohum koruma • Sürdürülebilir tarım",
@@ -27,8 +50,8 @@ export default function Hero() {
         id: 2,
         image: "/hero/2.jpg",
         titleLines: [
-          { text: "DOĞAL TARIM", variant: "default" },
-          { text: "SÜRDÜRÜLEBİLİR GELECEK", variant: "gradient" },
+          { text: "DOĞAL TARIM", variant: "default" as TitleVariant },
+          { text: "SÜRDÜRÜLEBİLİR GELECEK", variant: "gradient" as TitleVariant },
         ],
         subtitle: "Yerel çeşitler • Ekolojik denge • Biyoçeşitlilik • Gelecek nesillere miras",
       },
@@ -36,8 +59,8 @@ export default function Hero() {
         id: 3,
         image: "/hero/3.jpg",
         titleLines: [
-          { text: "ORGANİK SERTİFİKALI", variant: "default" },
-          { text: "TOHUM ÇEŞİTLERİ", variant: "gradient" },
+          { text: "ORGANİK SERTİFİKALI", variant: "default" as TitleVariant },
+          { text: "TOHUM ÇEŞİTLERİ", variant: "gradient" as TitleVariant },
         ],
         subtitle: "2000+ çeşit • 80+ ülkeye ihracat • 30+ yıllık deneyim • 50K+ mutlu müşteri",
       },
@@ -48,7 +71,6 @@ export default function Hero() {
   const [index, setIndex] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Otomatik geçiş (6sn), hover'da duraklat
   useEffect(() => {
     start();
     return stop;
@@ -59,6 +81,7 @@ export default function Hero() {
     stop();
     intervalRef.current = setTimeout(() => setIndex((i) => (i + 1) % slides.length), 6000);
   }
+
   function stop() {
     if (intervalRef.current) clearTimeout(intervalRef.current);
     intervalRef.current = null;
@@ -66,10 +89,8 @@ export default function Hero() {
 
   return (
     <>
-      {/* Üst ince marka şeridi (layout'ı etkilemesin diye absolute) */}
       <div className="pointer-events-none absolute top-0 left-0 right-0 z-30 h-1" aria-hidden="true" />
 
-      {/* Tam ekran hero */}
       <Section
         className="relative overflow-hidden bg-black min-h-screen min-h-[100svh] min-h-[100dvh] h-screen h-[100svh] h-[100dvh]"
         onMouseEnter={stop}
@@ -87,14 +108,12 @@ export default function Hero() {
               className="absolute inset-0"
               aria-hidden
             >
-              {/* Responsive arkaplan görseli */}
               <img
                 src={slides[index].image}
                 alt=""
                 className="h-full w-full object-cover"
                 loading={index === 0 ? "eager" : "lazy"}
               />
-              {/* Okunabilirlik örtüsü */}
               <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/60" />
             </motion.div>
           </AnimatePresence>
@@ -103,7 +122,6 @@ export default function Hero() {
         {/* İçerik */}
         <div className="absolute inset-0 flex items-center justify-center text-center">
           <div className="w-full max-w-5xl px-4">
-            {/* Başlık */}
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
               {slides[index].titleLines.map((line, i) => (
                 <span key={i} className="block">
@@ -112,14 +130,12 @@ export default function Hero() {
               ))}
             </h1>
 
-            {/* Alt yazı */}
             {slides[index].subtitle && (
               <p className="mt-4 text-base md:text-lg text-white/85 max-w-2xl mx-auto">
                 {slides[index].subtitle}
               </p>
             )}
 
-            {/* Butonlar — tüm slidelarda sabit */}
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/docs/gg-seed-world-sunumu.pdf"
@@ -158,7 +174,14 @@ export default function Hero() {
   );
 }
 
-function TitleSpan({ variant, children }: { variant?: "default" | "gradient" | "accent"; children: React.ReactNode }) {
+// TitleSpan bileşeni
+function TitleSpan({
+  variant,
+  children,
+}: {
+  variant?: TitleVariant;
+  children: React.ReactNode;
+}) {
   if (variant === "gradient") {
     return (
       <span className="bg-gradient-to-r from-[#1b7f3a] via-[#27ae60] to-[#f39c12] bg-clip-text text-transparent">
