@@ -6,8 +6,17 @@ import { ShoppingCart, Search as SearchIcon, Star, X, Eye, Filter, ChevronDown }
 import Link from "next/link";
 import { useCart } from "@/components/cart/CartProvider";
 
+/* ---------------- API BASE & yardımcılar ---------------- */
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/+$/, ""); // ör: https://backend.domain.com/api
+const API_ORIGIN = API_BASE.replace(/\/api$/, "");
+function absImage(p?: string | null) {
+  if (!p) return null;
+  if (/^https?:\/\//i.test(p)) return p;
+  return `${API_ORIGIN}${p.startsWith("/") ? p : `/${p}`}`;
+}
+
 /* ---------------- API Model ---------------- */
-type ApiProduct = {
+export type ApiProduct = {
   id: number;
   product_type: string;
   variety: string;
@@ -33,7 +42,7 @@ type ApiProduct = {
 };
 
 /* ---------------- UI Model ---------------- */
-type Product = {
+export type Product = {
   id: string;
   title: string;
   subtitle?: string;
@@ -74,7 +83,7 @@ function mapApiToShop(p: ApiProduct): Product | null {
     ratingCount,
     badges,
     featured: p.is_featured === 1,
-    imageUrl: p.image_path || null,
+    imageUrl: absImage(p.image_path) || null,
     raw: p,
   };
 }
@@ -96,14 +105,7 @@ function fmtYear(n?: number | null) {
 }
 
 /* ---------------- Stars ---------------- */
-function Stars({
-  value,
-  size = 16,
-  showLabel = true,
-  count,
-}: {
-  value: number; size?: number; showLabel?: boolean; count?: number;
-}) {
+function Stars({ value, size = 16, showLabel = true, count }: { value: number; size?: number; showLabel?: boolean; count?: number; }) {
   const safe = Math.max(0, Math.min(5, Number(value) || 0));
   const pct = (safe / 5) * 100;
 
@@ -143,7 +145,7 @@ function Stars({
 }
 
 /* ---------------- Page ---------------- */
-type SortKey = "best" | "rating" | "reviews" | "newest" | "priceAsc" | "priceDesc";
+export type SortKey = "best" | "rating" | "reviews" | "newest" | "priceAsc" | "priceDesc";
 
 export default function ShopPage() {
   const [q, setQ] = useState("");
@@ -161,7 +163,7 @@ export default function ShopPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
-  const { count: cartCount, addItem } = useCart();
+  const { addItem } = useCart();
 
   useEffect(() => {
     let abort = false;
@@ -169,7 +171,16 @@ export default function ShopPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("/api/products?limit=400&sort=created_at&order=desc", { cache: "no-store" });
+        if (!API_BASE) throw new Error("NEXT_PUBLIC_API_BASE tanımlı değil");
+        const url = new URL(`${API_BASE}/products`);
+        url.search = new URLSearchParams({
+          limit: "400",
+          sort: "created_at",
+          order: "desc",
+          is_active: "1",
+        }).toString();
+
+        const res = await fetch(url.toString(), { cache: "no-store" });
         if (!res.ok) throw new Error(`Ürün listesi alınamadı (${res.status})`);
         const json = (await res.json()) as { data: ApiProduct[] };
         const mapped = (json.data || []).map(mapApiToShop).filter((x): x is Product => !!x);
@@ -256,7 +267,7 @@ export default function ShopPage() {
     return data;
   }, [q, sort, dbProducts, region, onlyFeatured, minStars, priceMin, priceMax, withImage]);
 
-  // Sepete ekle (global store’a)
+  // Sepete ekle
   function addToCart(p: Product) {
     addItem({
       productId: p.raw.id,
@@ -279,10 +290,9 @@ export default function ShopPage() {
         {/* Header */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900">Mağaza</h1>
-        
         </div>
 
-        {/* Arama & Filtre & Sıralama */}
+        {/* Arama */}
         <div className="grid gap-3 md:grid-cols-3 mb-3">
           <label className="relative block md:col-span-3 lg:col-span-2">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -567,9 +577,10 @@ function ProductCard({ p, onAdd, onQuick }: { p: Product; onAdd: () => void; onQ
             alt={p.title}
             loading="lazy"
             className="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-105"
+            onClick={onQuick}
           />
         ) : (
-          <div className="w-full aspect-[4/3] bg-gray-100 flex items-center justify-center text-gray-400">
+          <div className="w-full aspect-[4/3] bg-gray-100 flex items-center justify-center text-gray-400" onClick={onQuick}>
             Görsel yok
           </div>
         )}

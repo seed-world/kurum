@@ -1,6 +1,5 @@
 // src/lib/routes/cart.ts
 
-
 import { getPool } from "@/lib/db/connection";
 import {
   AddOrSetItemInput,

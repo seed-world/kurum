@@ -1,49 +1,85 @@
-// src/lib/actions.ts
 "use server";
 
-import { cookies } from "next/headers";
+import "server-only";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import bcrypt from "bcrypt";
-import { queryRows } from "./db/connection";
-import { AdminRow } from "./types";
-import { signSession } from "./auth";
+
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/+$/, "");
+
+// Admin session cookie adımız
+const COOKIE_NAME = "admin_session";
+
+function isProd() {
+  return process.env.NODE_ENV === "production";
+}
 
 export async function loginAction(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const email = String(formData.get("email") || "").trim();
+  const password = String(formData.get("password") || "");
 
   if (!email || !password) {
     throw new Error("E-posta ve şifre zorunlu");
   }
-
-  const [rows] = await queryRows<AdminRow[]>(
-    `SELECT * FROM admins WHERE email = :email LIMIT 1`,
-    { email }
-  );
-  const admin = rows[0];
-  if (!admin || !admin.password_hash) {
-    throw new Error("Geçersiz bilgiler");
+  if (!API_BASE) {
+    throw new Error("NEXT_PUBLIC_API_BASE tanımlı değil");
   }
 
-  const ok = await bcrypt.compare(password, admin.password_hash);
-  if (!ok) {
-    throw new Error("Geçersiz bilgiler");
-  }
-
-  const token = await signSession({
-    sub: admin.id,
-    email: admin.email,
-    role: admin.role,
+  // Backend’e JSON isteği
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      // Origin başlığı bazı CORS kurulumlarında gerekli olabilir:
+      Origin: headers().get("origin") || "",
+    },
+    // server action olduğu için credentials gerekli değil, token body’den alınacak
+    body: JSON.stringify({ email, password }),
+    cache: "no-store",
   });
 
-  (await cookies()).set("admin_session", token, {
+  const text = await res.text();
+  let json: any = null;
+  try { json = text ? JSON.parse(text) : null; } catch { /* noop */ }
+
+  if (!res.ok) {
+    const msg = json?.error || `Giriş başarısız (${res.status})`;
+    throw new Error(msg);
+  }
+
+  const token = json?.token as string | undefined;
+  if (!token) {
+    // Güvenlik için backend token döndürmediyse hataya düş
+    throw new Error("Token alınamadı");
+  }
+
+  // Next tarafında httpOnly cookie set et
+  cookies().set({
+    name: COOKIE_NAME,
+    value: token,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    secure: isProd(),
+    // 7 gün
+    maxAge: 7 * 24 * 60 * 60,
   });
 
-  // 🔧 Burayı değiştiriyoruz:
   redirect("/admin");
+}
+
+export async function logoutAction() {
+  // İsteğe bağlı: backend’i de haberdar et (session invalidate vs.)
+  if (API_BASE) {
+    try {
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        cache: "no-store",
+      });
+    } catch {
+      // backend erişilemese bile local cookie’yi sileriz
+    }
+  }
+  cookies().delete(COOKIE_NAME);
+  redirect("/admin/auth/login");
 }

@@ -1,3 +1,5 @@
+// src/lib/utils.ts
+
 import { ListOptions, OrderDirection } from "./types";
 
 /** Boşlukları normalize edip %...% LIKE için güvenli hale getirir */

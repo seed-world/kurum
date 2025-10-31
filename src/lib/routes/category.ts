@@ -1,4 +1,5 @@
 // src/lib/routes/category.ts
+
 import { executeResult, queryRows } from "../db/connection";
 import type {
   ListOptions, PagedResult,

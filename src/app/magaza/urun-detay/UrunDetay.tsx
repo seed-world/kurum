@@ -8,6 +8,14 @@ import {
 } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
 
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/+$/, "");
+const API_ORIGIN = API_BASE.replace(/\/api$/, "");
+function absImage(p?: string | null) {
+  if (!p) return null;
+  if (/^https?:\/\//i.test(p)) return p;
+  return `${API_ORIGIN}${p.startsWith("/") ? p : `/${p}`}`;
+}
+
 /* --- Tipler --- */
 type ApiProduct = {
   id: number;
@@ -36,7 +44,6 @@ type ApiProduct = {
   category_name?: string | null;
 };
 
-/* --- Format Fonksiyonları --- */
 function fmtNumber(val: unknown) {
   if (val === null || val === undefined || val === "") return "—";
   if (typeof val === "number") return Intl.NumberFormat("tr-TR").format(val);
@@ -52,10 +59,12 @@ function fmtYear(n?: number | null) {
   return String(Math.trunc(Number(n)));
 }
 
+
 /* --- Yıldız Bileşeni --- */
 function Stars({ value, count, size = 18 }: { value: number; count?: number; size?: number }) {
   const safe = Math.max(0, Math.min(5, Number(value) || 0));
   const pct = (safe / 5) * 100;
+
 
   return (
     <div className="inline-flex items-center gap-2">
@@ -90,6 +99,7 @@ export default function UrunDetay({ id }: { id: number }) {
   const [loading, setLoading] = useState(false);
   const [qty, setQty] = useState<number>(1);
 
+
   const { addItem } = useCart();
 
   useEffect(() => {
@@ -98,7 +108,8 @@ export default function UrunDetay({ id }: { id: number }) {
       setLoading(true);
       setErr("");
       try {
-        const res = await fetch(`/api/products/${id}`, { cache: "no-store" });
+        if (!API_BASE) throw new Error("API_BASE (NEXT_PUBLIC_API_BASE) tanımlı değil");
+        const res = await fetch(`${API_BASE}/products/${id}`, { cache: "no-store" });
         if (!res.ok) throw new Error(`Ürün bulunamadı (${res.status})`);
         const json = await res.json();
         const p: ApiProduct = json?.data ?? json;
@@ -112,6 +123,7 @@ export default function UrunDetay({ id }: { id: number }) {
     load();
     return () => { abort = true; };
   }, [id]);
+
 
   if (loading) return <LoadingSkeleton />;
   if (err) {
@@ -129,6 +141,7 @@ export default function UrunDetay({ id }: { id: number }) {
   const ratingCount = Number.isFinite(data.rating_count as number) ? Number(data.rating_count) : 0;
   const categoryName = (data.category_name && data.category_name.trim()) ? data.category_name : data.product_type;
 
+
   const dec = () => setQty((q) => Math.max(1, q - 1));
   const inc = () => setQty((q) => Math.min(9999, q + 1));
   const onQtyChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -138,12 +151,13 @@ export default function UrunDetay({ id }: { id: number }) {
     else setQty(Math.min(9999, Math.max(1, n)));
   };
 
+
   const onAddToCart = () => {
     addItem({
       productId: data.id,
       title,
       price,
-      imageUrl: data.image_path ?? null,
+      imageUrl: absImage(data.image_path) ?? null,
       code: data.code,
       qty,
     });

@@ -6,6 +6,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, X, Eye, Star } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
 
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/+$/, "");
+const FILES_ORIGIN =
+    (process.env.NEXT_PUBLIC_FILES_ORIGIN || "").replace(/\/+$/, "") ||
+    (API_BASE ? API_BASE.replace(/\/api$/, "") : "");
+
+function absImage(p?: string | null) {
+    if (!p) return null;
+    if (/^https?:\/\//i.test(p)) return p;                 // zaten mutlak
+    const origin =
+        FILES_ORIGIN ||
+        (typeof window !== "undefined" ? window.location.origin : "");
+    if (!origin) return p.startsWith("/") ? p : `/${p}`;    // SSR çok erkense
+    return `${origin}${p.startsWith("/") ? p : `/${p}`}`;
+}
+
+
 type ApiProduct = {
     id: number;
     product_type: string;
@@ -74,7 +90,7 @@ function mapApiToShop(p: ApiProduct): Product | null {
         ratingCount,
         badges,
         featured: p.is_featured === 1,
-        imageUrl: p.image_path || null,
+        imageUrl: absImage(p.image_path) || null,
         raw: p,
     };
 }
@@ -144,9 +160,7 @@ export default function FeaturedProductsSection() {
     const [dbItems, setDbItems] = useState<ApiProduct[]>([]);
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState("");
-
     const [quickId, setQuickId] = useState<string | null>(null);
-
     const { addItem } = useCart();
 
     useEffect(() => {
@@ -155,19 +169,23 @@ export default function FeaturedProductsSection() {
             setLoading(true);
             setErr("");
             try {
-                // API is_featured parametresini destekliyorsa:
-                const url = `/api/products?limit=12&order=desc&sort=created_at&is_featured=1`;
-                const res = await fetch(url, { cache: "no-store" });
+                // backend artık is_featured/is_active filtrelerini destekliyor
+                const url = new URL(`${API_BASE}/products`);
+                url.search = new URLSearchParams({
+                    limit: "12",
+                    order: "desc",
+                    sort: "created_at",
+                    is_featured: "1",
+                    is_active: "1",
+                }).toString();
 
-                // desteklemiyorsa tümünü çekip client’ta filtreleyeceğiz
-                if (!res.ok) {
-                    throw new Error(`Öne çıkan ürünler alınamadı (${res.status})`);
-                }
+                const res = await fetch(url.toString(), { cache: "no-store" });
+                if (!res.ok) throw new Error(`Öne çıkan ürünler alınamadı (${res.status})`);
 
                 const json = (await res.json()) as Paged<ApiProduct>;
                 let rows = (json?.data ?? []) as ApiProduct[];
 
-                // güvenlik için client-side filtre
+                // ekstra güvenlik için yine filtreliyoruz
                 rows = rows.filter((p) => p.is_featured === 1 && p.is_active === 1).slice(0, 12);
 
                 if (!abort) setDbItems(rows);
@@ -182,8 +200,42 @@ export default function FeaturedProductsSection() {
         };
     }, []);
 
-    const items = useMemo(() => dbItems.map(mapApiToShop).filter((x): x is Product => !!x), [dbItems]);
+    const items = useMemo(
+        () =>
+            dbItems
+                .map((p) => {
+                    if (p.is_active === 0) return null;
+                    const title = [p.product_type, p.variety].filter(Boolean).join(" • ");
+                    const subtitle = p.sub_type || p.region || (p.code ? `Kod: ${p.code}` : undefined) || undefined;
+                    const price =
+                        typeof p.seedling_unit_price === "number" && !Number.isNaN(p.seedling_unit_price)
+                            ? Number(p.seedling_unit_price)
+                            : 0;
+                    const compareAt = price > 0 ? Math.round(price * 1.15) : undefined;
+                    const badges: string[] = [];
+                    if (p.region) badges.push(p.region);
+                    if (p.sub_type) badges.push(p.sub_type);
+                    if (p.germination_start_year) badges.push(String(p.germination_start_year));
+                    const rating = Number.isFinite(p.rating_avg as number) ? Number(p.rating_avg) : 0;
+                    const ratingCount = Number.isFinite(p.rating_count as number) ? Number(p.rating_count) : 0;
 
+                    return {
+                        id: `db-${p.id}`,
+                        title: title || p.code || `Ürün #${p.id}`,
+                        subtitle,
+                        price,
+                        compareAt,
+                        rating,
+                        ratingCount,
+                        badges,
+                        featured: p.is_featured === 1,
+                        imageUrl: absImage(p.image_path), // ← KÖK İLE BİRLEŞTİR
+                        raw: p,
+                    } as const;
+                })
+                .filter(Boolean) as Product[],
+        [dbItems]
+    );
     function addToCart(p: Product) {
         addItem({
             productId: p.raw.id,

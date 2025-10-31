@@ -92,7 +92,7 @@ export default function Hero() {
       <div className="pointer-events-none absolute top-0 left-0 right-0 z-30 h-1" aria-hidden="true" />
 
       <Section
-        className="relative overflow-hidden bg-black min-h-screen min-h-[100svh] min-h-[100dvh] h-screen h-[100svh] h-[100dvh]"
+        className="relative overflow-hidden  min-h-screen min-h-[100svh] min-h-[100dvh] h-screen h-[100svh] h-[100dvh]"
         onMouseEnter={stop}
         onMouseLeave={start}
       >

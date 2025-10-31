@@ -1,148 +1,160 @@
 // src/lib/routes/products.ts
-import { executeResult, queryRows } from "../db/connection";
+// Node DB importları YOK; PHP endpoint'lerine fetch atıyoruz.
+
 import type {
   ListOptions,
   PagedResult,
   Product,
-  ProductRow,
   NewProductInput,
-  UpdateProductInput
+  UpdateProductInput,
 } from "../types";
 import { orderBy, paginate, sanitizeLike, pick, parseId } from "../utils";
 
-/** undefined değerleri null'a çevirir (DB driver'ı undefined kabul etmez) */
+function toError(res: Response, json: any) {
+  return new Error(json?.error || `HTTP ${res.status}`);
+}
+
+/** undefined -> null (API tarafında tutarlı olsun) */
 function normalizeUndefinedToNull<T extends object>(obj: T): T {
   const clone: any = { ...obj };
-  for (const key of Object.keys(clone)) {
-    if (clone[key] === undefined) clone[key] = null;
-  }
+  for (const k of Object.keys(clone)) if (clone[k] === undefined) clone[k] = null;
   return clone;
 }
 
-/** Listeleme (arama + sıralama + sayfalama) */
+/** Listeleme (arama + sıralama + sayfalama) – PHP: /api/products.php */
 export async function listProducts(
   opts?: ListOptions & { category_id?: number }
 ): Promise<PagedResult<Product>> {
-  const { page, limit, offset } = paginate(opts);
-
-  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(200, Number(limit))) : 20;
-  const safeOffset = Number.isFinite(offset) ? Math.max(0, Number(offset)) : 0;
-
+  const { page, limit } = paginate(opts);
   const like = sanitizeLike(opts?.search);
   const { column, direction } = orderBy(opts?.sort, opts?.order, [
-    "id", "product_type", "variety", "region", "code", "created_at", "updated_at", "rating_avg", "rating_count"
+    "id",
+    "product_type",
+    "variety",
+    "region",
+    "code",
+    "created_at",
+    "updated_at",
+    "rating_avg",
+    "rating_count",
   ]);
-  const orderColumn = [
-    "id", "product_type", "variety", "region", "code", "created_at", "updated_at", "rating_avg", "rating_count"
-  ].includes(column) ? `p.${column}` : "p.id";
-  const orderDir = (direction || "ASC").toUpperCase() === "DESC" ? "DESC" : "ASC";
 
-  // ✅ Dinamik WHERE
-  const whereParts: string[] = [];
-  const params: any = {};
+  const qs = new URLSearchParams();
+  qs.set("page", String(page));
+  qs.set("limit", String(limit));
+  if (like) qs.set("search", like.replace(/%/g, "")); // PHP tarafı kendi LIKE hazırlasın
+  if (opts?.category_id != null) qs.set("category_id", String(opts.category_id));
+  qs.set("sort", column);
+  qs.set("order", (direction || "ASC").toUpperCase() === "DESC" ? "DESC" : "ASC");
 
-  if (like) {
-    whereParts.push(`(p.product_type LIKE :q ESCAPE '\\\\'
-                  OR p.variety  LIKE :q ESCAPE '\\\\'
-                  OR p.region   LIKE :q ESCAPE '\\\\'
-                  OR p.code     LIKE :q ESCAPE '\\\\')`);
-    params.q = like;
-  }
-  if (Number.isFinite(opts?.category_id)) {
-    whereParts.push(`p.category_id = :cid`);
-    params.cid = Number(opts?.category_id);
-  }
-  const whereSql = whereParts.length ? `WHERE ${whereParts.join(" AND ")}` : "";
-
-  const [rows] = await queryRows<ProductRow[]>(
-    `
-    SELECT * FROM products p
-    ${whereSql}
-    ORDER BY ${orderColumn} ${orderDir}
-    LIMIT ${safeLimit} OFFSET ${safeOffset}
-    `,
-    params
-  );
-
-  const [countRows] = await queryRows<any[]>(
-    `SELECT COUNT(*) AS total FROM products p ${whereSql}`,
-    params
-  );
+  const res = await fetch(`/api/products.php?` + qs.toString(), {
+    cache: "no-store",
+    credentials: "include",
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw toError(res, json);
 
   return {
-    data: rows as unknown as Product[],
-    page,
-    limit: safeLimit,
-    total: Number(countRows[0]?.total ?? 0),
+    data: (json.data as Product[]) ?? [],
+    page: Number(json.page ?? page),
+    limit: Number(json.limit ?? limit),
+    total: Number(json.total ?? 0),
   };
 }
 
-/** Tek ürün */
+/** Tek ürün – PHP: /api/products/{id}.php */
 export async function getProductById(id: number | string): Promise<Product | null> {
   const pid = parseId(id);
-  const [rows] = await queryRows<ProductRow[]>(`SELECT * FROM products WHERE id = :id`, { id: pid });
-  return (rows[0] as unknown as Product) ?? null;
+  const res = await fetch(`/api/products/${pid}.php`, {
+    cache: "no-store",
+    credentials: "include",
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw toError(res, json);
+  return (json?.data as Product) ?? null;
 }
 
-/** Ekle */
+/** Ekle – PHP: POST /api/products.php */
 export async function createProduct(input: NewProductInput): Promise<Product> {
-  const picked = pick(input, [
-    "product_type", "variety", "sub_type", "code", "region", "germination_start_year",
-    "seeds_2023", "seeds_2024", "seeds_2025_expected", "annual_growth_factor",
-    "seedling_unit_price", "asset_value_2023", "asset_value_2024", "asset_value_2025",
-    "is_active", "is_featured", "image_path", "category_id"
-  ]);
-
-  const payload = normalizeUndefinedToNull(picked) as Record<string, any>;
-
-  const [res] = await executeResult(
-    `
-    INSERT INTO products
-    (product_type,variety,sub_type,code,region,germination_start_year,
-     seeds_2023,seeds_2024,seeds_2025_expected,annual_growth_factor,
-     seedling_unit_price,asset_value_2023,asset_value_2024,asset_value_2025,
-     is_active,is_featured,image_path,category_id,created_at,updated_at)
-    VALUES
-    (:product_type,:variety,:sub_type,:code,:region,:germination_start_year,
-     :seeds_2023,:seeds_2024,:seeds_2025_expected,:annual_growth_factor,
-     :seedling_unit_price,:asset_value_2023,:asset_value_2024,:asset_value_2025,
-     COALESCE(:is_active,1),COALESCE(:is_featured,0),:image_path,:category_id,NOW(),NOW())
-    `,
-    payload
+  const payload = normalizeUndefinedToNull(
+    pick(input, [
+      "product_type",
+      "variety",
+      "sub_type",
+      "code",
+      "region",
+      "germination_start_year",
+      "seeds_2023",
+      "seeds_2024",
+      "seeds_2025_expected",
+      "annual_growth_factor",
+      "seedling_unit_price",
+      "asset_value_2023",
+      "asset_value_2024",
+      "asset_value_2025",
+      "is_active",
+      "is_featured",
+      "image_path",
+      "category_id",
+    ])
   );
 
-  const insertId = Number(res.insertId);
-  const [rows] = await queryRows<ProductRow[]>(`SELECT * FROM products WHERE id = :id`, { id: insertId });
-  return rows[0] as unknown as Product;
+  const res = await fetch(`/api/products.php`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw toError(res, json);
+  return json?.data as Product;
 }
 
-/** Güncelle */
+/** Güncelle – PHP: PATCH /api/products/{id}.php */
 export async function updateProduct(id: number | string, input: UpdateProductInput): Promise<Product | null> {
   const pid = parseId(id);
-
-  const picked = pick(input, [
-    "product_type", "variety", "sub_type", "code", "region", "germination_start_year",
-    "seeds_2023", "seeds_2024", "seeds_2025_expected", "annual_growth_factor",
-    "seedling_unit_price", "asset_value_2023", "asset_value_2024", "asset_value_2025",
-    "is_active", "is_featured", "image_path", "category_id"
-  ]);
-
-  const allowed = normalizeUndefinedToNull(picked) as Record<string, any>;
-  const keys = Object.keys(allowed);
-  if (keys.length === 0) return await getProductById(pid);
-
-  const setSql = keys.map(k => `${k} = :${k}`).join(", ");
-  await executeResult(
-    `UPDATE products SET ${setSql}, updated_at = NOW() WHERE id = :id`,
-    { id: pid, ...allowed }
+  const payload = normalizeUndefinedToNull(
+    pick(input, [
+      "product_type",
+      "variety",
+      "sub_type",
+      "code",
+      "region",
+      "germination_start_year",
+      "seeds_2023",
+      "seeds_2024",
+      "seeds_2025_expected",
+      "annual_growth_factor",
+      "seedling_unit_price",
+      "asset_value_2023",
+      "asset_value_2024",
+      "asset_value_2025",
+      "is_active",
+      "is_featured",
+      "image_path",
+      "category_id",
+    ])
   );
 
-  return await getProductById(pid);
+  const res = await fetch(`/api/products/${pid}.php`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw toError(res, json);
+  return (json?.data as Product) ?? null;
 }
 
-/** Sil */
+/** Sil – PHP: DELETE /api/products/{id}.php */
 export async function deleteProduct(id: number | string): Promise<{ deleted: boolean }> {
   const pid = parseId(id);
-  const [res] = await executeResult(`DELETE FROM products WHERE id = :id`, { id: pid });
-  return { deleted: res.affectedRows > 0 };
+  const res = await fetch(`/api/products/${pid}.php`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw toError(res, json);
+  return { deleted: Boolean(json?.deleted ?? true) };
 }
